@@ -14,7 +14,7 @@ use think\facade\Route;
 $sub_domain = get_subdomain();
 
 if ($sub_domain == 'rsapi'){
-    Route::get('test', 'rsapi/Phone/getPhone');
+    Route::get('test', 'rsapi/Test/index');
     Route::post('phone', 'rsapi/Phone/getPhone');
     Route::post('country', 'rsapi/Country/getCountry');
     Route::post('message', 'rsapi/Message/getMessage');
