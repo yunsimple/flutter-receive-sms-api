@@ -3,10 +3,9 @@
 
 namespace app\http\middleware;
 
-use app\appapi\controller\RedisController;
 use think\Controller;
 use think\Exception;
-use think\facade\Request;
+use app\common\controller\RedisController;
 
 class AuthUserApp extends Controller
 {
@@ -20,7 +19,7 @@ class AuthUserApp extends Controller
         }catch (Exception $e){
             return show('鉴权失败', '', 4003, '', 403);
         }
-        $redis = new RedisController();
+        $redis = RedisController::getInstance();
         $redis_username = $redis->hGet($access_token_key, 'username');
         if ($user_name != $redis_username){
             return show('鉴权失败11', '', 4003, '', 403);

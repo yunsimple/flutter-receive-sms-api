@@ -20,7 +20,7 @@ class ParamsController extends BaseController
             'notice' => [
                 ["title" => "天道酬勤，有你必行。"],
             ],
-            'subtitle' => '永久免费的接码软件',
+            'subtitle' => '',
             'cache' => true
         ];
         return show('success', $data);

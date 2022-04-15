@@ -8,7 +8,7 @@ use think\Validate;
 
 class CountryController extends BaseController
 {
-    protected $middleware = ['AuthApp'];
+    //protected $middleware = ['AuthApp'];
 
     protected $header = []; //自定义response返回header
     /**
@@ -25,23 +25,11 @@ class CountryController extends BaseController
             return show($validate->getError(), $validate->getError(), 4000);
         }
         $page = ($data['page']) ? $data['page'] : 1 ;
-
-        $redis_local = new RedisController();
-        $redis_key = 'app:cache:country:page:' . $page;
-        $redis_cache_value = $redis_local->get($redis_key);
-        if ($redis_cache_value){
-            $country_data = unserialize($redis_cache_value);
-        }else{
-            $country_data = (new CountryModel())->appGetCountry($page);
-            //国家名称小写字母
-            if ($country_data) {
-                foreach ($country_data as $key => $value) {
-                    $country_data[$key]['en_title'] = strtolower($country_data[$key]['en_title']);
-                }
-            }
-            $redis_local->setexCache($redis_key, serialize($country_data));
-        }
+        $country_data = (new CountryModel())->appGetCountry($page);
         if ($country_data){
+            if ($country_data->isEmpty()){
+                return show('没有找到数据', '', 3000, $request->header);
+            }
             return show('获取成功', $country_data, 0, $request->header);
         }else{
             return show('国家列表获取失败', '', 4000);

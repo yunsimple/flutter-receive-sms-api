@@ -8,8 +8,8 @@ use think\Validate;
 class UserController extends BaseController
 {
     protected $middleware = [
-        'AuthApp',
-        'AuthUserApp'=> ['only'=>['getMy']]
+        //'AuthApp',
+        //'AuthUserApp'=> ['only'=>['getMy']]
     ];
     
     public function register(){
@@ -42,6 +42,23 @@ class UserController extends BaseController
      * 获取个人中心数据
      */
     public function getMy(){
+        return json_encode(['email'=>'deepblue@163.com', 'info'=>'天空没有我的痕迹，我已经飞过']);
         return show('获取成功', ['email'=>'deepblue@163.com', 'info'=>'天空没有我的痕迹，我已经飞过']);
+    }
+
+    /**
+     * 获取顶部公告信息
+     */
+    public function notice(){
+        $notice = [
+            [
+                'id' => 2022031903,
+                'title' => '系统将于4月1日公测，欢迎提交建议，BUG。',
+                'description' => '有奖公测，欢迎提交BUG，建议，有机会赢得私有号码。',
+                'type' => 'success',
+                'isClose' => true
+            ]
+        ];
+        return show('success', $notice);
     }
 }

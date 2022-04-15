@@ -1,6 +1,7 @@
 <?php
 namespace app\rsapi\controller;
 
+use app\common\controller\RedisController;
 use bt\BtEmailServer;
 use think\App;
 use think\facade\Lang;
@@ -10,12 +11,12 @@ use think\Request;
 
 class EmailController extends BaseController
 {
-    protected $middleware = ['AuthApp'];
+    //protected $middleware = ['AuthApp'];
     protected $header = []; //自定义response返回header
     
     //获取当前生效的邮箱后坠
     public function getEmailSite(Request $request){
-        return show('success', ['@1655mail.com', '@mailscode.com', '@bestemail.online'], 0, $request->header);
+        return show('success', ['1655mail.com', 'mailscode.com', 'bestemail.online'], 0, $request->header);
     }
     
     //获取emal
@@ -24,10 +25,10 @@ class EmailController extends BaseController
         $email = input('post.email');
         $validate = Validate::checkRule($email, 'must|email|max:30|min:10');
         if (!$validate){
-            return show('传递参数异常:', $email, 4000);
+            return show('传递参数异常', $email, 4000);
         }
         if ($email == 'admin@yinsiduanxin.com'){
-            return show('传递参数异常:', $email, 4000);
+            return show('传递参数异常', $email, 4000);
         }
         $bt = new BtEmailServer();
         $result = $bt->getEmail($email);
@@ -40,7 +41,7 @@ class EmailController extends BaseController
                     'noreply@suningnews.com',
                 ];
                 foreach ($result['data'] as $key => $value){
-                    (new RedisController())->incr('mail_receive_total');
+                    (RedisController::getInstance())->incr('mail_receive_total');
                     foreach ($str as $k => $v){
                         $num = stristr($value['from'], $v);
                         if ($num){
@@ -61,21 +62,22 @@ class EmailController extends BaseController
     //指字用户名申请emal
     public function emailApply(Request $request)
     {
+        trace(input('post.'), 'notice');
         $user = strtolower(trim(input('post.email_name')));
         $site = trim(input('post.site'));
         if (empty($user)){
             $user = $this->getEmailUser(5, 4);
         }else{
-            $validate = Validate::checkRule($user, 'must|alphaDash|max:12|min:6');
+            $validate = Validate::checkRule($user, 'must|alphaDash|max:24|min:6');
             if(!$validate){
-                return show('传递参数异常:', $user, 4000);
+                return show('传递参数异常', $user, 4000);
             }
         }
         $bt = new BtEmailServer();
         $result = $bt->emailApply($user, $user . $site);
         if ($result['status']){
             Session::set('email', $user . $site);
-            (new RedisController())->incr('mail_user_total');
+            (RedisController::getInstance())->incr('mail_user_total');
             return show('申请成功', $user . $site, 0, $request->header);
         }else{
             return show('申请失败，请换个帐号试试', $result, 4000, $request->header);
@@ -92,7 +94,7 @@ class EmailController extends BaseController
             return show(Lang::get('mail_alert_abnormal'), $email, 4000);
         }
         if ($email == 'admin@yinsiduanxin.com'){
-            return show('传递参数异常:', $email, 4000);
+            return show('传递参数异常', $email, 4000);
         }
         $bt = new BtEmailServer();
         if ($transpond_email){

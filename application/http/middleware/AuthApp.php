@@ -1,12 +1,8 @@
 <?php
-
-
 namespace app\http\middleware;
 
-
-use app\appapi\controller\RedisController;
-use Symfony\Component\DependencyInjection\Tests\Compiler\DummyExtension;
 use think\Controller;
+use app\common\controller\RedisController;
 
 class AuthApp extends Controller
 {
@@ -29,7 +25,7 @@ class AuthApp extends Controller
         $access_token = $headers['Access-Token'];
         $access_token_key = 'app:accessToken:' . $access_token;
 
-        $redis = new RedisController();
+        $redis = RedisController::getInstance();
         if (!$redis->exists($access_token_key)) {
             return show('鉴权失败', '', 4003, '', 403);
         }
@@ -39,7 +35,7 @@ class AuthApp extends Controller
         $authorization = $headers['Authorization'];
         $authorization = base64_decode($authorization);
         //防止重放攻击
-        if (!$redis->sAddEx('app:auth:' . $authorization)){
+        if (!RedisController::sAddEx($redis,'app:auth:' . $authorization)){
             return show('鉴权失败', '', 4003, '', 403);
         }
 
@@ -57,7 +53,7 @@ class AuthApp extends Controller
         $redis->hIncrBy($refresh_token_key, 'requestNumber', 1);
 
         //把Authorization写入redis无序列表，做重放攻击限制
-        $redis->sAddEx('app:auth:' . $authorization);
+        //$redis->sAddEx('app:auth:' . $authorization);
         //传出一个token的有效时间，其他控制器使用
         $request->header = ['Expires' => $redis->ttl($access_token_key)];
 

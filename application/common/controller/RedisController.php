@@ -1,7 +1,7 @@
 <?php
 namespace app\common\controller;
 
-use think\facade\Env;
+use think\facade\Config;
 
 class RedisController
 {
@@ -35,15 +35,15 @@ class RedisController
     public static function getInstance($select = 'local', $db = 0, $uniqID = null)
     {
         if ($select == 'sync'){
-            $host = Env::get('sync_host');
-            $auth = Env::get('sync_auth');
-            $db   = Env::get('sync_db');
-            $port = Env::get('sync_port');
+            $host = Config::get('config.sync_host');
+            $auth = Config::get('config.sync_auth');
+            $db   = Config::get('config.sync_db');
+            $port = Config::get('config.sync_port');
         }elseif($select == 'master'){
-            $host = Env::get('master_host');
-            $auth = Env::get('master_auth');
-            $db   = Env::get('master_db');
-            $port = Env::get('master_port');
+            $host = Config::get('config.master_host');
+            $auth = Config::get('config.master_auth');
+            $db   = Config::get('config.master_db');
+            $port = Config::get('config.master_port');
         }else{
             $host = '127.0.0.1';
             $auth = null;
@@ -87,5 +87,50 @@ class RedisController
     public static function count()
     {
         return count(static::$_instance);
+    }
+
+    /**
+     * 向set集合添加数据，并设置时间，如果有效期内存在，则返回false
+     * @param \Redis $redis
+     * @param string $key
+     * @param mixed $value
+     * @param int $expire
+     * @return bool
+     */
+    public static function sAddEx($redis, $key, $value = 1, $expire = 1800){
+        $result = $redis->sAdd($key, $value);
+        if ($result){
+            if ($expire > 0){
+                $redis->expire($key, $expire);
+            }
+            return true;
+        }else{
+            return false;
+        }
+    }
+
+    public static function zSetLatestMsg($redis, $key, $num = 19){
+        $result = $redis->zRevRange($key, 0, $num);
+        $data = [];
+        foreach ($result as $key => $value){
+            $data[$key] = unserialize($value);
+            $data[$key]['smsDate'] = (int)$data[$key]['smsDate'];
+        }
+        if (count($data) > 0){
+            return $data;
+        }else{
+            return 'null';
+        }
+    }
+
+    public static function stringIncrbyEx($redis, $key, $expire = 1800, $incr = 1){
+        $num = $redis->incrBy($key, $incr);
+        if ($num && $expire > 0){
+            $ttl = $redis->expire($key, $expire);
+            if ($ttl){
+                return $num;
+            }
+        }
+        return false;
     }
 }
