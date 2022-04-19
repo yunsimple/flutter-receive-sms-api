@@ -10,5 +10,8 @@ return [
     'master_db'   => 0,
     'master_port' => 17481,
 
-    //redis键名配置
+    //AES加密信息
+    'aes_key' => '15f654af5addbd856e4c2bc32ff22ffc',
+    'aes_iv'  => 'LifeIsButASpan57',
+    'aes_mode'=> 'aes-256-cbc'
 ];

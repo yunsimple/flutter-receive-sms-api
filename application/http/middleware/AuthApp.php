@@ -3,11 +3,34 @@ namespace app\http\middleware;
 
 use think\Controller;
 use app\common\controller\RedisController;
+use think\facade\Config;
 
 class AuthApp extends Controller
 {
     public function handle($request, \Closure $next)
     {
+
+        $redis = RedisController::getInstance();
+        $salt = Config::get('config.aes_key');
+        $headers = getallheaders();
+/*        if (!array_key_exists('Access-Token', $headers)) {
+            return show('鉴权失败', '', 4003);
+        }*/
+        if (!array_key_exists('Authorization', $headers)) {
+            return show('鉴权失败', '', 4003);
+        }
+        $authorization = $headers['Authorization'];
+        //防止重放攻击
+        if (!RedisController::sAddEx($redis,Config::get('cache.prefix') . 'auth:' . $authorization)){
+            return show('鉴权失败', '', 4003);
+        }
+        //验证authorization是否正确
+        $salt_random = substr($authorization, -10);
+        $new_authorization = md5($salt . $salt_random) . $salt_random;
+        if ($new_authorization != $authorization){
+            return show('鉴权失败', '', 4003);
+        }
+        return $next($request);
         /**
          * 1.检查access_token是否存在
          * 2.检查refresh还有多久失效，如果快失效了，延期

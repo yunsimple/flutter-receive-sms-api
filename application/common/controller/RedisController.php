@@ -6,13 +6,14 @@ use think\facade\Config;
 class RedisController
 {
     protected static $_instance = [];
-    protected $redis;
+    protected static $redis;
 
     /**
      * Redis constructor.
      * @param $host
      * @param $port
      * @param $auth
+     * @param $db
      */
     private function __construct($host, $port, $auth, $db)
     {
@@ -27,12 +28,13 @@ class RedisController
 
     /**
      * @desc   获取redis单例
-     * @author limx
+     * @param string $select
      * @param int $db redis几号数据库
-     * @param string $uniqID 当相同配置，但是想新开实例时，可以赋值
+     * @param string|null $uniqID 当相同配置，但是想新开实例时，可以赋值
      * @return \Redis
+     * @author limx
      */
-    public static function getInstance($select = 'local', $db = 0, $uniqID = null)
+    public static function getInstance(string $select = 'local', int $db = 0, string $uniqID = null)
     {
         if ($select == 'sync'){
             $host = Config::get('config.sync_host');
@@ -74,8 +76,9 @@ class RedisController
             $redis->auth($auth);
         }
         if ($db > 0) {
-            $redis->select($db);
+            $redis->select((int)$db);
         }
+        self::$redis = $redis;
         return $redis;
     }
 
@@ -132,5 +135,12 @@ class RedisController
             }
         }
         return false;
+    }
+
+    public static function hMsetEx($key, $value, $expire){
+        if (!is_array($value))
+            return 2;
+        self::$redis->hMset($key, $value);
+        return self::$redis->expire($key, $expire);
     }
 }

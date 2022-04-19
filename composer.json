@@ -16,8 +16,12 @@
         }
     ],
     "require": {
-        "php": ">=5.6.0",
-        "topthink/framework": "5.1.*"
+        "php": ">=7.0",
+        "topthink/framework": "5.1.*",
+        "kreait/firebase-tokens": "^1.15",
+      "ext-openssl": "*",
+      "ext-json": "*",
+      "ext-redis": "*"
     },
     "autoload": {
         "psr-4": {

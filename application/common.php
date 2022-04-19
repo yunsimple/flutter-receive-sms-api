@@ -454,14 +454,16 @@ function checkSpider($ip)
                 }*/
 
         //redis蜘蛛池检测
-        if ((new \app\common\controller\RedisController())->sIsMember('spider', $ip)){
+        $redis = \app\common\controller\RedisController::getInstance();
+        if ($redis->sIsMember('spider', $ip)){
             return true;
         }
 
         //反向dns检测
         $rdns = gethostbyaddr($ip);
         if (regSpider($rdns)){
-            (new \app\common\controller\RedisController())->setSetValue('spider', $ip);
+            // todo 暂时不用，先不管
+            $redis->setSetValue('spider', $ip);
             return true;
         }
     }
