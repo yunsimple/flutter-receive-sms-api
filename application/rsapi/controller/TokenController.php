@@ -20,22 +20,20 @@ class TokenController extends BaseController
      */
     public function getToken(): Json
     {
-
-        trace(getallheaders(), 'notice');
-        $salt = '15f654af5addbd856e4c2bc32ff22ffc';
-        $iv = 'LifeIsButASpan57';
-        $aes_mode = 'aes-256-cbc';
+        $headers = getallheaders();
+        trace($headers, 'notice');
+        $salt = generateKey();
+        $iv = generateIv();
+        $aes_mode = Config::get('config.aes_mode');
 
         $token = input('post.token');
-        trace($token, 'notice');
+        //trace($token, 'notice');
         $jwt = openssl_decrypt($token, $aes_mode, $salt, 0, $iv);
         $firebase_user = (new FirebaseJwtController())->decoded($jwt);
         if (!$firebase_user){
             return show('鉴权失败', '', 4003, '', 403);
         }
 
-
-        $data['uid'] = $firebase_user['user_id'];
         //登陆成功后，发放access_token refresh_token expires从response中返回
         //token写入redis保存
         $access_token = getRandChar(18);
@@ -56,21 +54,22 @@ class TokenController extends BaseController
         $refresh_token_data['email'] = $firebase_user['email'];
         $refresh_token_data['user_id'] = $firebase_user['user_id'];
 
-        $access = RedisController::hMsetEx($access_token_key, $access_data, 3600);
-        $refresh = RedisController::hMsetEx($refresh_token_key, $refresh_token_data, 15 * 86400);
+        $access = RedisController::hMsetEx($access_token_key, $access_data, Config::get('config.access_token_expires'));
+        $refresh = RedisController::hMsetEx($refresh_token_key, $refresh_token_data, Config::get('config.refresh_access_token_expires'));
         if ($refresh && $access) {
             //清除之前的token
-            // todo 有必须删除之前的refresh token
-            $this->delTokenByAccess();
+            // todo 有必须删除之前的refresh token,是否需要删除，如果删除，被人大批量使用，那岂不是发现不了
+            //$this->delTokenByAccess();
             //对token进行AES加密
-            $access_token = openssl_encrypt($access_token, Config::get('config.aes_mode'), Config::get('config.aes_key'), 0, Config::get('config.aes_iv'));
-            $refresh_token = openssl_encrypt($refresh_token, Config::get('config.aes_mode'), Config::get('config.aes_key'), 0, Config::get('config.aes_iv'));
+            trace($access_token . '|' . $refresh_token, 'notice');
+            $access_token = openssl_encrypt($access_token, Config::get('config.aes_mode'), generateKey(), 0, generateIv());
+            $refresh_token = openssl_encrypt($refresh_token, Config::get('config.aes_mode'), generateKey(), 0, generateIv());
             if ($access_token && $refresh_token){
                 return show('登陆成功', ['access_token' => $access_token, 'refresh_token' => $refresh_token], 0, ['Expires'=>$redis->ttl($access_token_key)]);
             }
             //return show('登陆成功', ['access_token' => $access_token, 'refresh_token' => $refresh_token], 0, ['Expires'=>60]);
         }
-        return show('登陆失败', '', 4000);
+        return show('登陆失败', '', 4000, '', 403);
     }
 
     /**

@@ -3,11 +3,12 @@ namespace app\rsapi\controller;
 
 use app\common\controller\FirebaseJwtController;
 use app\common\controller\RedisController;
+use think\facade\Request;
 
 class TestController
 {
     public function index(){
-        return config('config.aes_key');
+        return Request::url();
 /*        dump(openssl_get_cipher_methods());
         foreach (openssl_get_cipher_methods(true) as $m) {
             echo $m . ' => ' . openssl_cipher_iv_length($m) . PHP_EOL;

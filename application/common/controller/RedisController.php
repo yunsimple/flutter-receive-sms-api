@@ -100,7 +100,8 @@ class RedisController
      * @param int $expire
      * @return bool
      */
-    public static function sAddEx($redis, $key, $value = 1, $expire = 1800){
+    public static function sAddEx(\Redis $redis, string $key, $value = 1, int $expire = 3600): bool
+    {
         $result = $redis->sAdd($key, $value);
         if ($result){
             if ($expire > 0){

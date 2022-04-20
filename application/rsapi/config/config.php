@@ -11,7 +11,10 @@ return [
     'master_port' => 17481,
 
     //AES加密信息
-    'aes_key' => '15f654af5addbd856e4c2bc32ff22ffc',
-    'aes_iv'  => 'LifeIsButASpan57',
-    'aes_mode'=> 'aes-256-cbc'
+    'aes_key' => 0xFF345B9A,
+    'aes_iv'  => 'All lay load on the willing horse',
+    'aes_iv_length'  => 16,
+    'aes_mode'=> 'aes-256-cbc',
+    'access_token_expires' => 3600,
+    'refresh_token_expires' => 30*86400,
 ];

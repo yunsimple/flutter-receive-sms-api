@@ -4,82 +4,59 @@ namespace app\http\middleware;
 use think\Controller;
 use app\common\controller\RedisController;
 use think\facade\Config;
+use think\facade\Request;
 
 class AuthApp extends Controller
 {
     public function handle($request, \Closure $next)
     {
-
+        //todo 如果远程更改了密钥，返回的headers中可以给个提示，或者一个code码，提醒需要获取getSalt，不需要等到重启应用
         $redis = RedisController::getInstance();
-        $salt = Config::get('config.aes_key');
+        $salt = generateKey();
         $headers = getallheaders();
-/*        if (!array_key_exists('Access-Token', $headers)) {
-            return show('鉴权失败', '', 4003);
-        }*/
+        trace($headers, 'notice');
+
+        // Access_Token检查，过滤/login接口
+        if (Request::url() != '/login'){
+            if (!array_key_exists('Access-Token', $headers)) {
+                return show('鉴权失败，Access_Token不存在', '', 4003);
+            }
+            $access_token = $headers['Access-Token'];
+            $access_token_key = Config::get('cache.prefix') . 'accessToken:' . $access_token;
+            if (!RedisController::getInstance()->exists($access_token_key)){
+                return show('鉴权失败，Access_Token验证失败', '', 4003);
+            }
+        }
+
         if (!array_key_exists('Authorization', $headers)) {
-            return show('鉴权失败', '', 4003);
+            return show('鉴权失败，Authorization不存在', '', 4003, '', 403);
         }
         $authorization = $headers['Authorization'];
         //防止重放攻击
         if (!RedisController::sAddEx($redis,Config::get('cache.prefix') . 'auth:' . $authorization)){
-            return show('鉴权失败', '', 4003);
+            return show('鉴权失败，Authorization重复', '', 4003, '', 403);
         }
         //验证authorization是否正确
+        //如果在更新key期间，需要时间切换，12小时内需要验证两种情况。
         $salt_random = substr($authorization, -10);
         $new_authorization = md5($salt . $salt_random) . $salt_random;
         if ($new_authorization != $authorization){
-            return show('鉴权失败', '', 4003);
-        }
-        return $next($request);
-        /**
-         * 1.检查access_token是否存在
-         * 2.检查refresh还有多久失效，如果快失效了，延期
-         * 3.每天打开app应用检查refresh过期时间
-         */
-        $salt = 'ca-app-pub-3940256099942544~334759533';
-        $headers = getallheaders();
-        if (!array_key_exists('Access-Token', $headers)) {
-            return show('鉴权失败', '', 4003, '', 403);
-        }
-        if (!array_key_exists('Authorization', $headers)) {
-            return show('鉴权失败', '', 4003, '', 403);
+            return show('鉴权失败，Authorization匹配错误', '', 4003, '', 403);
         }
 
-        $access_token = $headers['Access-Token'];
-        $access_token_key = 'app:accessToken:' . $access_token;
+        //验证通过 对access和refresh token进行请求统计，以便后面做限流
+        if (array_key_exists('Access-Token', $headers)){
+            $access_token = $headers['Access-Token'];
+            $access_token_key = Config::get('cache.prefix') . 'accessToken:' . $access_token;
+            $refresh_token = $redis->hGet($access_token_key, 'refreshToken');
+            $refresh_token_key = Config::get('cache.prefix') . 'refreshToken:' . $refresh_token;
 
-        $redis = RedisController::getInstance();
-        if (!$redis->exists($access_token_key)) {
-            return show('鉴权失败', '', 4003, '', 403);
+            $redis->hIncrBy($access_token_key, 'requestNumber', 1);
+            $redis->hIncrBy($refresh_token_key, 'requestNumber', 1);
+
+            //传出一个token的有效时间，其他控制器使用
+            $request->header = ['Expires' => $redis->ttl($access_token_key)];
         }
-
-        //比对Authorization
-        //encode(md5(access_token + random_str + salt) + 'a' + random_str)
-        $authorization = $headers['Authorization'];
-        $authorization = base64_decode($authorization);
-        //防止重放攻击
-        if (!RedisController::sAddEx($redis,'app:auth:' . $authorization)){
-            return show('鉴权失败', '', 4003, '', 403);
-        }
-
-        //$salt = '兄台爬慢点可好';
-        $random_str = substr($authorization, -9);
-        $random_str_fake = 'a' . $random_str;
-        if (md5($access_token . $random_str . $salt) . $random_str_fake !== $authorization) {
-            return show('鉴权失败', '', 4003, '', 403);
-        }
-
-        //验证通过 对access和refres进行请求统计，以便后面做限流
-        $redis->hIncrBy($access_token_key, 'requestNumber', 1);
-        $refresh_token = $redis->hGet($access_token_key, 'refreshToken');
-        $refresh_token_key = 'app:refreshToken:' . $refresh_token;
-        $redis->hIncrBy($refresh_token_key, 'requestNumber', 1);
-
-        //把Authorization写入redis无序列表，做重放攻击限制
-        //$redis->sAddEx('app:auth:' . $authorization);
-        //传出一个token的有效时间，其他控制器使用
-        $request->header = ['Expires' => $redis->ttl($access_token_key)];
-
         return $next($request);
     }
 }

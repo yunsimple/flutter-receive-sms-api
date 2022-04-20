@@ -130,76 +130,6 @@ function real_ip(){
     return $ip;
 }
 
-//判断蜘蛛
-function is_crawler() {
-    $agent= strtolower($_SERVER['HTTP_USER_AGENT']);
-    if (!empty($agent)) {
-        $spiderSite= array(
-            "Sogou",
-            "SemrushBot",
-            "360Spider",
-            "YisouSpider",
-            "bingbot",
-            "JikeSpider",
-            "EasouSpider",
-            "TencentTraveler",
-            "Baiduspider",
-            "BaiduGame",
-            "Googlebot",
-            "msnbot",
-            "Sogouwebspider",
-            "Sosospider+",
-            "Sogou web spider",
-            "ia_archiver",
-            "Yahoo! Slurp",
-            "YoudaoBot",
-            "Yahoo Slurp",
-            "MSNBot",
-            "Java (Often spam bot)",
-            "BaiDuSpider",
-            "Voila",
-            "Yandex bot",
-            "BSpider",
-            "twiceler",
-            "Sogou Spider",
-            "Speedy Spider",
-            "Google AdSense",
-            "Heritrix",
-            "Python-urllib",
-            "Alexa (IA Archiver)",
-            "Ask",
-            "Exabot",
-            "Custo",
-            "OutfoxBot/YodaoBot",
-            "yacy",
-            "SurveyBot",
-            "legs",
-            "lwp-trivial",
-            "Nutch",
-            "StackRambler",
-            "The web archive (IA Archiver)",
-            "Perl tool",
-            "MJ12bot",
-            "Netcraft",
-            "MSIECrawler",
-            "WGet tools",
-            "larbin",
-            "Teoma",
-            "Fish search",
-            'AhrefsBot',
-            'YandexBot',
-        );
-        foreach($spiderSite as $val) {
-            $str = strtolower($val);
-            if (strpos($agent, $str)){
-                return true;
-            }
-        }
-    } else {
-        return false;
-    }
-}
-
 /**
  * 获取子域名
  * @return string
@@ -222,77 +152,6 @@ function get_domain(){
     return $domain[0];
 }
 
-/**
- * 移动端判断
- */
-
-function is_mobile()
-{
-    // 如果有HTTP_X_WAP_PROFILE则一定是移动设备
-    if (isset ($_SERVER['HTTP_X_WAP_PROFILE']))
-    {
-        return true;
-    }
-    // 如果via信息含有wap则一定是移动设备
-    if (isset ($_SERVER['HTTP_VIA']))
-    {
-        // 找不到为flase,否则为true
-        return stristr($_SERVER['HTTP_VIA'], "wap") ? true : false;
-    }
-    // 脑残法，判断手机发送的客户端标志,兼容性有待提高
-    if (isset ($_SERVER['HTTP_USER_AGENT']))
-    {
-        $clientkeywords = array ('nokia',
-            'sony',
-            'ericsson',
-            'mot',
-            'samsung',
-            'htc',
-            'sgh',
-            'lg',
-            'sharp',
-            'sie-',
-            'philips',
-            'panasonic',
-            'alcatel',
-            'lenovo',
-            'iphone',
-            'ipod',
-            'blackberry',
-            'meizu',
-            'android',
-            'netfront',
-            'symbian',
-            'ucweb',
-            'windowsce',
-            'palm',
-            'operamini',
-            'operamobi',
-            'openwave',
-            'nexusone',
-            'cldc',
-            'midp',
-            'wap',
-            'mobile'
-        );
-        // 从HTTP_USER_AGENT中查找手机浏览器的关键字
-        if (preg_match("/(" . implode('|', $clientkeywords) . ")/i", strtolower($_SERVER['HTTP_USER_AGENT'])))
-        {
-            return true;
-        }
-    }
-    // 协议法，因为有可能不准确，放到最后判断
-    if (isset ($_SERVER['HTTP_ACCEPT']))
-    {
-        // 如果只支持wml并且不支持html那一定是移动设备
-        // 如果支持wml和html但是wml在html之前则是移动设备
-        if ((strpos($_SERVER['HTTP_ACCEPT'], 'vnd.wap.wml') !== false) && (strpos($_SERVER['HTTP_ACCEPT'], 'text/html') === false || (strpos($_SERVER['HTTP_ACCEPT'], 'vnd.wap.wml') < strpos($_SERVER['HTTP_ACCEPT'], 'text/html'))))
-        {
-            return true;
-        }
-    }
-    return false;
-}
 
 /**
  * 获取随机位token字符
@@ -426,164 +285,6 @@ function gap_times($time, $lang = 'zh', $type = 'later')
     }
 }
 
-/**
- * gethostbyaddr识别蜘蛛
- * @param $ip
- * @param $agent
- * @param $hostname
- * @return bool
- */
-function checkSpider($ip)
-{
-    //1.正则预判ip段是否为蜘蛛
-    //2.判断redis蜘蛛池是否存在记录
-    //3.进行agent校验
-    //4.根据gethostbyaddr获取反向dns值
-    //5.判断gethostbyaddr获取到的dns值
-    //6.如果判断为蜘蛛写入redis蜘蛛池
-    if (isset($_SERVER['HTTP_USER_AGENT'])){
-        $agent = $_SERVER['HTTP_USER_AGENT'];
-    }else{
-        return false;
-    }
-    if (regSpider($agent)){
-
-        /*        //蜘蛛IP段检测
-                if (isRobotIP($ip)){
-                    return true;
-                }*/
-
-        //redis蜘蛛池检测
-        $redis = \app\common\controller\RedisController::getInstance();
-        if ($redis->sIsMember('spider', $ip)){
-            return true;
-        }
-
-        //反向dns检测
-        $rdns = gethostbyaddr($ip);
-        if (regSpider($rdns)){
-            // todo 暂时不用，先不管
-            $redis->setSetValue('spider', $ip);
-            return true;
-        }
-    }
-    return false;
-}
-
-/**
- * 正则判断字符串是否存在
- */
-function regSpider($agent){
-    /**
-     * baiduspider-116-179-32-237.crawl.baidu.com
-     * crawl-66-249-79-121.googlebot.com
-     * sogouspider-49-7-21-103.crawl.sogou.com
-     * hn.kd.ny.adsl  360/360Spider
-     * msnbot-207-46-13-96.search.msn.com  必应/bingbot
-     * ip-54-36-148-34.a.ahrefs.com
-     * g1038.crawl.yahoo.net
-     * 77-88-5-79.spider.yandex.com
-     * shenmaspider-106-11-157-42.crawl.sm.cn 神马/YisouSpider
-     * bytespider-60-8-123-10.crawl.bytedance.com 头条
-     * ip-54-36-148-76.a.ahrefs.com
-     */
-    if (preg_match('/(?:Sogou|360Spider|YisouSpider|shenmaspider|bingbot|Baiduspider|Googlebot|msnbot|Yahoo|Yandex|MJ12bot|Teoma|Bytespider|YoudaoBot|Voila|BSpider|twiceler|Heritrix|Alexa|Ask|Exabot|Custo|OutfoxBot|yacy|SurveyBot|legs|lwp-trivial|Nutch|StackRambler|Netcraft|MSIECrawler|larbin|AhrefsBot|ahrefs|YandexBot|BingPreview)/iu', $agent)){
-        return true;
-    }
-    return false;
-}
-
-//根据IP段判断是否为蜘蛛，需要更新IP段
-function isRobotIP($ip) {
-    if (empty($ip)){
-        $ip = real_ip();
-    }
-    $spiderSite= array(
-        '123.125.',
-        '220.181.',
-        '121.14.',
-        '203.208.',
-        '210.72.',
-        '125.90.',
-        '218.0.',
-        '216.239.',
-        '64.233.',
-        '66.102.',
-        '66.249.',
-        '72.14.',
-        '202.101.',
-        '222.73.',
-        '66.249.65.',
-        '101.226.',
-        '180.153.',
-        '180.163.',
-        '182.118.',
-        '61.55.',
-        '101.',
-        '123.126.',
-        '218.30.',
-        '61.135.',
-        '42.156.',
-        '42.120.',
-        '202.106.',
-        '202.108.',
-        '222.185.',
-        '65.54.',
-        '207.46.',
-        '207.68.',
-        '219.133.',
-        '202.96.',
-        '202.104.',
-        '219.142.',
-        '66.196.',
-        '68.142.',
-        '72.30.',
-        '74.6.',
-        '202.165.',
-        '202.160.',
-        '42.236.',
-    );
-    foreach($spiderSite as $val) {
-        if (strpos($ip, $val) === 0) {
-            return true;
-        }
-    }
-    return false;
-}
-
-//验证码生成图片 preg_replace_callback回调方法
-function codePregReplaceCallbackFunction($matches){
-    //每个小时的第多少分钟显示网站名
-    //$trap_time = config('config.common.trap_minutes');
-    if ((date('i', time()) % 10) == 0){
-        $host = \think\facade\Request::host();
-        if ($host == 'www.sms.com'){
-            $host = 'www.sms.com';
-        }
-        if ($host == '*.com'){
-            $host = 'www.*.com';
-        }
-        $url = ' (' . $host . ')';
-    }else{
-        $url = null;
-    }
-    return "<img src='".codeImage($matches[0] . $url)."'>";
-}
-
-//号码前台加密显示
-function phoneEncryption($phone, $type = 'phone'){
-    //&#xa008;
-    $str = '';
-    for ($i = 0; $i < strlen($phone); $i++){
-        $str .= '&#xa00' . substr($phone, $i, 1) . ';';
-    }
-    if ($type == 'phone'){
-        return $str;
-    }else{
-        return '+' . $str;
-    }
-}
-
 //一个数字，显示成整数舍入模式 51520 显示成50000+
 function numberDim($number){
     if (!$number || $number < 100){
@@ -593,4 +294,25 @@ function numberDim($number){
     $new_number = substr($number, 0, 1);
     $new_number .= str_repeat('0', strlen($number) - 1);
     return $new_number . '+';
+}
+
+// 密钥key生成算法
+function generateKey(): string
+{
+    return md5(config('config.aes_key'));
+}
+
+// 密钥iv生成算法
+function generateIv(){
+    $iv = str_replace(" ", "", config('config.aes_iv'));
+    $aes_iv_length = config('config.aes_iv_length');
+    $iv_length = strlen($iv);
+    if ($iv_length < $aes_iv_length){
+        $add = generateKey();
+        $add = substr($add, 0, $aes_iv_length - $iv_length);
+        $iv .= $add;
+    }elseif ($iv_length > $aes_iv_length){
+        $iv = substr($iv, 0 , $aes_iv_length);
+    }
+    return $iv;
 }
