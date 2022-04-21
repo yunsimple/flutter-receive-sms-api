@@ -17,4 +17,9 @@ return [
     'aes_mode'=> 'aes-256-cbc',
     'access_token_expires' => 3600,
     'refresh_token_expires' => 30*86400,
+
+    //状态码
+    'empty' => 3000, //数据为空
+    'auth' => 3001, //需要重新请求/login 获取token
+    'no_permission' => 4003, //没有权限
 ];
