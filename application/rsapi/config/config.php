@@ -15,7 +15,7 @@ return [
     'aes_iv'  => 'All lay load on the willing horse',
     'aes_iv_length'  => 16,
     'aes_mode'=> 'aes-256-cbc',
-    'access_token_expires' => 3600,
+    'access_token_expires' => 5*60,
     'refresh_token_expires' => 30*86400,
 
     //状态码
