@@ -13,7 +13,7 @@ use think\facade\Route;
 
 $sub_domain = get_subdomain();
 
-Route::post('test', 'rsapi/Test/index');
+Route::get('test', 'rsapi/Test/index');
 Route::post('phone', 'rsapi/Phone/getPhone');
 Route::post('country', 'rsapi/Country/getCountry');
 Route::post('message', 'rsapi/Message/getMessage');

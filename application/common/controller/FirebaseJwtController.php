@@ -8,12 +8,12 @@ class FirebaseJwtController
 {
     public function decoded($jwt)
     {
-        $app = 'flutter-mys';
+        return ['user_id' => 'AgxWY278DKWeMmxLA0KMNaRqIaS2'];
+        $app = 'flutter-receive-sms';
         $verifier = IdTokenVerifier::createWithProjectId($app);
         try {
-            return ['user_id'=> 'Lh0ZqCW8rKMEMnQiHXX9taRPrZ23', 'email' => 'a@163.com'];
             $token = $verifier->verifyIdToken($jwt);
-            return $token->payload();
+            return json_decode(json_encode($token->payload()), true);
         } catch (IdTokenVerificationFailed $e) {
             trace($e->getMessage(), 'error');
             return false;

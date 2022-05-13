@@ -14,8 +14,8 @@ class AuthApp extends Controller
         $redis = RedisController::getInstance();
         $salt = generateKey();
         $headers = getallheaders();
-        trace($headers, 'notice');
-        // Access_Token检查，过滤/login接口
+
+/*        // Access_Token检查，过滤/login接口
         if (Request::url() !== '/login' && Request::url() !== '/access'){
             if (!array_key_exists('Access-Token', $headers)) {
                 return show('鉴权失败，Access_Token不存在', '', Config::get('config.auth'));
@@ -32,9 +32,9 @@ class AuthApp extends Controller
         }
         $authorization = $headers['Authorization'];
         //防止重放攻击 todo 调试关闭
-/*        if (!RedisController::sAddEx($redis,Config::get('cache.prefix') . 'auth:' . $authorization)){
+        if (!RedisController::sAddEx($redis,Config::get('cache.prefix') . 'auth:' . $authorization)){
             return show('鉴权失败，Authorization重复', '', 4003, '', 403);
-        }*/
+        }
         //验证authorization是否正确
         //如果在更新key期间，需要时间切换，12小时内需要验证两种情况。
         $salt_random = substr($authorization, -10);
@@ -54,7 +54,17 @@ class AuthApp extends Controller
             $redis->hIncrBy($refresh_token_key, 'requestNumber', 1);
 
             //传出一个token的有效时间，其他控制器使用
-            $request->header = ['Expires' => $redis->ttl($access_token_key)];
+            $request->Expires = ['Expires' => $redis->ttl($access_token_key)];
+        }*/
+        //传出app使用的语言，默认为英文
+        if (array_key_exists('Language', $headers)){
+            if ($headers['Language'] == 'zh'){
+                $request->Language = 'tw';
+            }else{
+                $request->Language = $headers['Language'];
+            }
+        }else{
+            $request->Language = 'en';
         }
         return $next($request);
     }

@@ -280,7 +280,7 @@ class PhoneModel extends BaseModel
     /**
      * APP 根据条件获取号码列表
      */
-    public function appGetPhone($country_id = null, $page = 1, $limit = 10){
+    public function appGetPhone($country_id = null, $page = 1, $limit = 10, $language = 'en'){
         if (empty($country_id)){
             $result = self::with('country')
                 ->where('show', '=', 1)
@@ -304,7 +304,9 @@ class PhoneModel extends BaseModel
                 ->select();
         }
         if ($result && !$result->isEmpty()){
-            return $result->visible(['id', 'phone_num', 'total_num', 'show', 'country.id', 'country.en_title', 'country.title', 'country.bh'])->toArray();
+            // app需要当前语言的名称
+            $app_language = 'country.' . $language . '_title';
+            return $result->visible(['id', 'phone_num', 'total_num', 'show', 'country.id', $app_language, 'country.bh'])->toArray();
         }else{
             return 'null';
         }

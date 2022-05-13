@@ -8,7 +8,7 @@ use think\Validate;
 class UserController extends BaseController
 {
     protected $middleware = [
-        //'AuthApp',
+        'AuthApp' => ['only' => ['getMy']],
         //'AuthUserApp'=> ['only'=>['getMy']]
     ];
     
@@ -49,15 +49,15 @@ class UserController extends BaseController
     /**
      * 获取顶部公告信息
      */
-    public function notice(){
+    public function notice(): \think\response\Json
+    {
         $notice = [
             [
-                'id' => 2022031903,
-                'title' => '系统将于4月1日公测，欢迎提交建议，BUG。',
-                'description' => '有奖公测，欢迎提交BUG，建议，有机会赢得私有号码。',
-                'type' => 'success',
+                'id' => 20220051112356,
+                'description' => '有奖公测，欢迎提交BUG，建议，有机会赢取惊喜。',
+                'type' => 'info',
                 'isClose' => true
-            ]
+            ],
         ];
         return show('success', $notice);
     }

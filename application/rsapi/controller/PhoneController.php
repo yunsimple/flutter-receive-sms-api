@@ -17,6 +17,7 @@ class PhoneController extends BaseController
      * 根据国家获取号码列表
      */
     public function getPhone(Request $request){
+        $language = $request->Language;
         $data['country_id'] = input('post.country_id');
         $data['page'] = input('post.page');
         //验证country_id
@@ -29,6 +30,7 @@ class PhoneController extends BaseController
         }
         $redis_local = RedisController::getInstance();
         $phone_page_key = Config::get('cache.prefix') . 'cache:phone:page' . $data['page'] . ':country' . $data['country_id'];
+        // todo 上线需要更改
         $redis_local_phone_value = false;$redis_local->get($phone_page_key);
         if ($redis_local_phone_value){
             //从redis取数据
@@ -36,7 +38,7 @@ class PhoneController extends BaseController
         }else{
             //从数据库取数据
             $phone_model = new PhoneModel();
-            $phone_data = $phone_model->appGetPhone($data['country_id'], $data['page']);
+            $phone_data = $phone_model->appGetPhone($data['country_id'], $data['page'],10, $language);
             if ($phone_data){
                 $redis_local->setex($phone_page_key, 1800, serialize($phone_data));
             }
@@ -47,9 +49,16 @@ class PhoneController extends BaseController
             }
             $redis_sync = RedisController::getInstance('sync');
             foreach ($phone_data as $key => $value) {
+                // 插入广告
                 /*if ($key == 3 || $key == 7){
                     $phone_data[$key]['type'] = 'admob';
                 }*/
+
+                // 更改获取到的语言字段 en_title 改成title
+                $old_language = $language . '_title';
+                $phone_data[$key]['country']['title'] = $value['country'][$old_language];
+                unset($phone_data[$key]['country'][$old_language]);
+
                 $update_time = $redis_sync->zRange('message:'.$value['phone_num'], -1, -1);
                 if (count($update_time) > 0){
                     $update_time = unserialize($update_time[0]);

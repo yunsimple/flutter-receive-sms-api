@@ -30,6 +30,7 @@ class TokenController extends BaseController
         //trace($token, 'notice');
         $jwt = openssl_decrypt($token, $aes_mode, $salt, 0, $iv);
         $firebase_user = (new FirebaseJwtController())->decoded($jwt);
+        trace($firebase_user, 'notice');
         if (!$firebase_user){
             return show('鉴权失败', '', 4003, '', 403);
         }
@@ -51,7 +52,7 @@ class TokenController extends BaseController
         $refresh_token_data['requestNumber'] = 0;
         $refresh_token_data['refreshNuber'] = 0;
         $refresh_token_data['updateTime'] = time();
-        $refresh_token_data['email'] = $firebase_user['email'];
+        $refresh_token_data['email'] = array_key_exists('email', $firebase_user) ? $firebase_user['email'] : 'anonymous';
         $refresh_token_data['user_id'] = $firebase_user['user_id'];
 
         $access = RedisController::hMsetEx($access_token_key, $access_data, Config::get('config.access_token_expires'));

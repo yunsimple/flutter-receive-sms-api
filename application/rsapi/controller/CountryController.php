@@ -16,6 +16,7 @@ class CountryController extends BaseController
      */
     public function getCountry(Request $request)
     {
+        $language = $request->Language;
         $data['page'] = input('post.page');
         //数据校验
         $validate = Validate::make([
@@ -25,7 +26,7 @@ class CountryController extends BaseController
             return show($validate->getError(), $validate->getError(), 4000);
         }
         $page = ($data['page']) ? $data['page'] : 1 ;
-        $country_data = (new CountryModel())->appGetCountry($page);
+        $country_data = (new CountryModel())->appGetCountry($page, 12, $language);
         if ($country_data){
             if ($country_data->isEmpty()){
                 return show('没有找到数据', '', 3000, $request->header);
