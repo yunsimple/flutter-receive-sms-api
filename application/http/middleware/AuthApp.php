@@ -15,7 +15,7 @@ class AuthApp extends Controller
         $salt = generateKey();
         $headers = getallheaders();
 
-/*        // Access_Token检查，过滤/login接口
+        // Access_Token检查，过滤/login接口
         if (Request::url() !== '/login' && Request::url() !== '/access'){
             if (!array_key_exists('Access-Token', $headers)) {
                 return show('鉴权失败，Access_Token不存在', '', Config::get('config.auth'));
@@ -55,7 +55,7 @@ class AuthApp extends Controller
 
             //传出一个token的有效时间，其他控制器使用
             $request->Expires = ['Expires' => $redis->ttl($access_token_key)];
-        }*/
+        }
         //传出app使用的语言，默认为英文
         if (array_key_exists('Language', $headers)){
             if ($headers['Language'] == 'zh'){

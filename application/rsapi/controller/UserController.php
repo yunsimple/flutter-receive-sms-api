@@ -54,7 +54,7 @@ class UserController extends BaseController
         $notice = [
             [
                 'id' => 20220051112356,
-                'description' => '有奖公测，欢迎提交BUG，建议，有机会赢取惊喜。',
+                'description' => 'There are prizes for public beta, welcome to submit bugs, suggestions, and have a chance to win surprises.',
                 'type' => 'info',
                 'isClose' => true
             ],

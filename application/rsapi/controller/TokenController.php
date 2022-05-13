@@ -94,17 +94,26 @@ class TokenController extends BaseController
         if (!$validate->check(['refresh_token' => $refresh_token])) {
             return show((string)$validate->getError(), $validate->getError(), 4000);
         }
+
         //refresh_token 解密
-        $salt = generateKey();
-        $iv = generateIv();
-        $aes_mode = Config::get('config.aes_mode');
-        $refresh_token = openssl_decrypt($refresh_token, $aes_mode, $salt, 0, $iv);
-        $refresh_token_key = Config::get('cache.prefix') . 'refreshToken:' . $refresh_token;
-        //验证refresh
-        $redis = RedisController::getInstance();
-        if (!$redis->exists($refresh_token_key)) {
-            return show('鉴权失败-refresh为空', '', 4004);
+        $ivs = Config::get('config.aes_iv');
+        $num = 0;
+        foreach ($ivs as $iv){
+            trace('密钥' . $iv, 'notice');
+            if($this->checkRefreshToken($refresh_token, generateKey(), generateIv($iv))){
+                trace('验证密钥成功' . $iv, 'notice');
+                $num++;
+                //break;
+            }else{
+                trace('验证密钥失败' . $iv, 'notice');
+            }
         }
+        if ($num == 0){
+            return show('鉴权失败-refresh错误', '', 4004);
+        }
+
+        $redis = RedisController::getInstance();
+        $refresh_token_key = Config::get('cache.prefix') . 'refreshToken:' . $refresh_token;
         // todo 还可以进一步检查，hash里面其他参数，对安全性做健全处理
         // 签发accessToken
         $access_token_data = [
@@ -114,7 +123,7 @@ class TokenController extends BaseController
             'updateTime' => time(),
         ];
         $access_token = getRandChar(18);
-        trace($access_token, 'notice');
+
         $access = RedisController::hMsetEx($cache_prefix . 'accessToken:' . $access_token, $access_token_data, Config::get('config.access_token_expires'));
 
         if ($access) {
@@ -130,6 +139,19 @@ class TokenController extends BaseController
         } else {
             return show('签发失败', '', 4000);
         }
+    }
+
+    // 解密refresh_token
+    // 更换密钥后，有部分用户未及时获到到最新密钥，24小时内，允许使用旧的密钥，作兼容处理
+    private function checkRefreshToken($refresh_token, $salt, $iv){
+        $aes_mode = Config::get('config.aes_mode');
+        $decode_token = openssl_decrypt($refresh_token, $aes_mode, $salt, 0, $iv);
+        $refresh_token_key = Config::get('cache.prefix') . 'refreshToken:' . $decode_token;
+        $redis = RedisController::getInstance();
+        if (!$redis->exists($refresh_token_key)) {
+            return false;
+        }
+        return true;
     }
 
     public function loginOut()

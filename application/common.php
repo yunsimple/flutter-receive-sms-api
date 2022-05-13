@@ -303,8 +303,10 @@ function generateKey(): string
 }
 
 // 密钥iv生成算法
-function generateIv(){
-    $iv = str_replace(" ", "", config('config.aes_iv'));
+function generateIv($iv = ''){
+    if ($iv == ''){
+        $iv = str_replace(" ", "", config('config.aes_iv')[0]);
+    }
     $aes_iv_length = config('config.aes_iv_length');
     $iv_length = strlen($iv);
     if ($iv_length < $aes_iv_length){

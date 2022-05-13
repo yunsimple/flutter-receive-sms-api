@@ -8,7 +8,8 @@ use think\facade\Request;
 class TestController
 {
     public function index(){
-        return 'https://lh3.googleusercontent.com/a-/AOh14GiTfrRk9934QPd7ZjDyfaP30kBUZt02YDpNugsO=s96-c';
+        dump(config('config.aes_iv')[0]);
+        die;
 /*        dump(openssl_get_cipher_methods());
         foreach (openssl_get_cipher_methods(true) as $m) {
             echo $m . ' => ' . openssl_cipher_iv_length($m) . PHP_EOL;

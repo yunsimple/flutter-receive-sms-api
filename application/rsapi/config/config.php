@@ -12,7 +12,9 @@ return [
 
     //AES加密信息
     'aes_key' => 0xFF345B9A,
-    'aes_iv'  => 'All lay load on the willing horse',
+    'aes_iv'  => [
+        'SsCF5poAfNB4frq5', // 2022-5-13 21:00上线新密钥
+    ],
     'aes_iv_length'  => 16,
     'aes_mode'=> 'aes-256-cbc',
     'access_token_expires' => 5*60,
