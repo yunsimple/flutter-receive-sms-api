@@ -31,11 +31,15 @@ Route::post('login_out', 'rsapi/Token/loginOut');
 Route::post('access', 'rsapi/Token/getAccessByRefresh');
 Route::post('register', 'rsapi/User/register');
 Route::post('my', 'rsapi/User/getMy');
-Route::post('update', 'rsapi/Update/getUpdate');
+Route::get('update', 'rsapi/Update/getUpdate');
 Route::post('getinfo', 'rsapi/Update/getInfo');
 Route::post('countrys', 'rsapi/Phone/getPhones');
 Route::post('params', 'rsapi/Params/getParams');
 Route::post('notice', 'rsapi/User/notice');
+Route::post('upcoming_phone', 'rsapi/Phone/getUpcomingPhone');
+Route::post('new_phone', 'rsapi/Phone/getNewPhone');
+Route::post('favorites', 'rsapi/Favorites/add');
+Route::post('favorites_del', 'rsapi/Favorites/del');
 
 if ($sub_domain == 'rsapi'){
     Route::get('test', 'rsapi/Test/index');

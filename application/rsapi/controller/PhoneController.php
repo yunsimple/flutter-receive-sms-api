@@ -22,7 +22,7 @@ class PhoneController extends BaseController
         $data['page'] = input('post.page');
         //验证country_id
         $validate = Validate::make([
-            'country_id|国家ID' => 'integer|max:3',
+            'country_id|国家ID' => 'alphaNum|max:10',
             'page|页数' => 'integer|max:4'
         ]);
         if (!$validate->check($data)) {
@@ -49,11 +49,6 @@ class PhoneController extends BaseController
             }
             $redis_sync = RedisController::getInstance('sync');
             foreach ($phone_data as $key => $value) {
-                // 插入广告
-                /*if ($key == 3 || $key == 7){
-                    $phone_data[$key]['type'] = 'admob';
-                }*/
-
                 // 更改获取到的语言字段 en_title 改成title
                 $old_language = $language . '_title';
                 $phone_data[$key]['country']['title'] = $value['country'][$old_language];
@@ -125,5 +120,23 @@ class PhoneController extends BaseController
             //失败反馈处理
         }
         return show('反馈成功，等待处理', '', 0, $request->header);
+    }
+
+    public function getUpcomingPhone(){
+        $result = (new PhoneModel())->getUpcomingNumber();
+        if ($result > 0){
+            return show('Request success', $result);
+        }else{
+            return show('Request success,data is empty',$result, 1);
+        }
+    }
+
+    public function getNewPhone(){
+        $count = (new PhoneModel())->getNewPhone(15);
+        if ($count > 0){
+            return show('Request success', $count);
+        }else{
+            return show('Request success,data is empty',0, 1);
+        }
     }
 }

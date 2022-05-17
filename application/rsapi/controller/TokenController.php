@@ -15,13 +15,13 @@ class TokenController extends BaseController
     protected $middleware = ['AuthApp'];
 
     /**
-     * 签发accessToken和refreshToken
+     * 签发accessToken和refreshToken /login
      * @return Json
      */
     public function getToken(): Json
     {
-        $headers = getallheaders();
-        trace($headers, 'notice');
+        //$headers = getallheaders();
+        //trace($headers, 'notice');
         $salt = generateKey();
         $iv = generateIv();
         $aes_mode = Config::get('config.aes_mode');
@@ -30,6 +30,7 @@ class TokenController extends BaseController
         //trace($token, 'notice');
         $jwt = openssl_decrypt($token, $aes_mode, $salt, 0, $iv);
         $firebase_user = (new FirebaseJwtController())->decoded($jwt);
+        trace('firebase_user', 'notice');
         trace($firebase_user, 'notice');
         if (!$firebase_user){
             return show('鉴权失败', '', 4003, '', 403);
@@ -50,7 +51,7 @@ class TokenController extends BaseController
         $access_data['updateTime'] = time();
         $refresh_token_data['ip'] = real_ip();
         $refresh_token_data['requestNumber'] = 0;
-        $refresh_token_data['refreshNuber'] = 0;
+        $refresh_token_data['refreshNumber'] = 0;
         $refresh_token_data['updateTime'] = time();
         $refresh_token_data['email'] = array_key_exists('email', $firebase_user) ? $firebase_user['email'] : 'anonymous';
         $refresh_token_data['user_id'] = $firebase_user['user_id'];
@@ -62,7 +63,6 @@ class TokenController extends BaseController
             // todo 有必须删除之前的refresh token,是否需要删除，如果删除，被人大批量使用，那岂不是发现不了
             //$this->delTokenByAccess();
             //对token进行AES加密
-            trace($access_token . '|' . $refresh_token, 'notice');
             $access_token = openssl_encrypt($access_token, Config::get('config.aes_mode'), generateKey(), 0, generateIv());
             $refresh_token = openssl_encrypt($refresh_token, Config::get('config.aes_mode'), generateKey(), 0, generateIv());
             if ($access_token && $refresh_token){
@@ -87,11 +87,11 @@ class TokenController extends BaseController
     public function getAccessByRefresh(): Json
     {
         $cache_prefix = Config::get('cache.prefix');
-        $refresh_token = input('post.token');
+        $refresh_token_code = input('post.token');
         $validate = Validate::make([
             'refresh_token|Token' => 'require|max:100'
         ]);
-        if (!$validate->check(['refresh_token' => $refresh_token])) {
+        if (!$validate->check(['refresh_token' => $refresh_token_code])) {
             return show((string)$validate->getError(), $validate->getError(), 4000);
         }
 
@@ -99,8 +99,9 @@ class TokenController extends BaseController
         $ivs = Config::get('config.aes_iv');
         $num = 0;
         foreach ($ivs as $iv){
-            trace('密钥' . $iv, 'notice');
-            if($this->checkRefreshToken($refresh_token, generateKey(), generateIv($iv))){
+            //trace('密钥' . $iv, 'notice');
+            $refresh_token = $this->checkRefreshToken($refresh_token_code, generateKey(), generateIv($iv));
+            if($refresh_token){
                 trace('验证密钥成功' . $iv, 'notice');
                 $num++;
                 //break;
@@ -143,18 +144,19 @@ class TokenController extends BaseController
 
     // 解密refresh_token
     // 更换密钥后，有部分用户未及时获到到最新密钥，24小时内，允许使用旧的密钥，作兼容处理
-    private function checkRefreshToken($refresh_token, $salt, $iv){
+    private function checkRefreshToken($refresh_token_code, $salt, $iv)
+    {
         $aes_mode = Config::get('config.aes_mode');
-        $decode_token = openssl_decrypt($refresh_token, $aes_mode, $salt, 0, $iv);
+        $decode_token = openssl_decrypt($refresh_token_code, $aes_mode, $salt, 0, $iv);
         $refresh_token_key = Config::get('cache.prefix') . 'refreshToken:' . $decode_token;
         $redis = RedisController::getInstance();
         if (!$redis->exists($refresh_token_key)) {
             return false;
         }
-        return true;
+        return $decode_token;
     }
 
-    public function loginOut()
+    public function loginOut(): Json
     {
         $result = $this->delTokenByAccess();
         if ($result > 0) {

@@ -31,7 +31,7 @@ class AuthApp extends Controller
             return show('鉴权失败，Authorization不存在', '', 4003);
         }
         $authorization = $headers['Authorization'];
-        //防止重放攻击 todo 调试关闭
+        //防止重放攻击
         if (!RedisController::sAddEx($redis,Config::get('cache.prefix') . 'auth:' . $authorization)){
             return show('鉴权失败，Authorization重复', '', 4003, '', 403);
         }

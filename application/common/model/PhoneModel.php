@@ -6,6 +6,7 @@ use app\common\controller\RedisController;
 use think\facade\Cache;
 use think\facade\Config;
 use think\facade\Request;
+use think\Model;
 use think\model\concern\SoftDelete;
 
 class PhoneModel extends BaseModel
@@ -291,6 +292,33 @@ class PhoneModel extends BaseModel
                 ->order('id', 'desc')
                 ->page($page, $limit)
                 ->select();
+        }elseif ($country_id == 'upcoming'){
+            $result = self::with('country')
+                ->where('show', '=', 1)
+                ->where('online', '=', 1)
+                ->where('type', '=', 2)
+                ->where('online', '=', 1)
+                ->order('online', 'desc')
+                ->order('sort', 'desc')
+                ->order('id', 'desc')
+                ->page($page, $limit)
+                ->select();
+        }elseif ($country_id == 'favorites'){
+            // 获取该用户收藏的号码
+            $access_token = getallheaders()['Access-Token'];
+            $user_info = (new FirebaseUserModel())->getUserInfoByAccessToken($access_token, 'user_id');
+            $favorites_set_key = Config::get('cache.prefix') . 'favorites:' . $user_info;
+            $redis6379 = RedisController::getInstance();
+            $phones = $redis6379->sMembers($favorites_set_key);
+            $result = self::with('country')
+                ->where('show', '=', 1)
+                ->where('online', '=', 1)
+                ->whereIn('phone_num', $phones)
+                ->order('online', 'desc')
+                ->order('sort', 'desc')
+                ->order('id', 'desc')
+                ->page($page, $limit)
+                ->select();
         }else{
             $result = self::with('country')
                 ->where('country_id', 'in', $country_id)
@@ -332,4 +360,27 @@ class PhoneModel extends BaseModel
             }
         }
     }
+
+    //获取upcoming号码数据
+    public function getUpcomingNumber(){
+        return self::where('display', 1)
+            ->where('online', 1)
+            ->where('show', 1)
+            ->where('type', 2)
+            ->cache('upcoming_number',1800)
+            ->count();
+    }
+
+    // 获取最近多长时间最新上线的号码
+    public function getNewPhone($day = 15){
+        $time = time();
+        return self::where('display', 1)
+            ->where('online', 1)
+            ->where('show', 1)
+            //->where('type', 2)
+            ->whereTime('create_time', 'between', [$time-($day*86400),$time])
+            ->cache('upcoming_number',1800)
+            ->count();
+    }
+
 }

@@ -3,6 +3,8 @@
 namespace app\rsapi\controller;
 
 use app\common\controller\RedisController;
+use app\common\model\FirebaseUserModel;
+use think\facade\Config;
 use think\Request;
 use think\Validate;
 
@@ -27,7 +29,16 @@ class MessageController extends BaseController
             if ($message_data == 'null'){
                 return show('没有找到数据', '', 3000, $request->header);
             }
-            return show('获取成功', $message_data, 0, $request->header);
+            // 判断该号码是否被收藏
+            $access_token = $request->header()['access-token'];
+            $user_info = (new FirebaseUserModel())->getUserInfoByAccessToken($access_token);
+            $is_favorites = false;
+            if (array_key_exists('email', $user_info)){
+                // 去redis缓存里面查询
+                $redis6379 = RedisController::getInstance();
+                $is_favorites = $redis6379->sIsMember(Config::get('cache.prefix') . 'favorites:' . $user_info['user_id'], $data['phone_num']);
+            }
+            return show('获取成功', ['message'=>$message_data,'info'=>['favorites'=>$is_favorites]], 0, $request->header);
         }else{
             return show('短信获取失败，请稍候再试', '', 4000, $request->header);
         }
