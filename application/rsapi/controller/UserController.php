@@ -41,9 +41,9 @@ class UserController extends BaseController
     /**
      * 获取个人中心数据
      */
-    public function getMy(){
-        return json_encode(['email'=>'deepblue@163.com', 'info'=>'天空没有我的痕迹，我已经飞过']);
-        return show('获取成功', ['email'=>'deepblue@163.com', 'info'=>'天空没有我的痕迹，我已经飞过']);
+    public function getMy(): \think\response\Json
+    {
+        return show('获取成功', ['upcomingTime'=> 1653055200, 'version'=> 1.6]);
     }
 
     /**

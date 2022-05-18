@@ -319,6 +319,16 @@ class PhoneModel extends BaseModel
                 ->order('id', 'desc')
                 ->page($page, $limit)
                 ->select();
+        }elseif ($country_id == 'vip'){
+            $result = self::with('country')
+                ->where('show', '=', 1)
+                ->where('type', '=', 3)
+                ->where('online', '=', 1)
+                ->order('online', 'desc')
+                ->order('sort', 'desc')
+                ->order('id', 'desc')
+                ->page($page, $limit)
+                ->select();
         }else{
             $result = self::with('country')
                 ->where('country_id', 'in', $country_id)

@@ -22,7 +22,8 @@ class MessageController extends BaseController
         if (!$validate->check($data)) {
             return show('短信获取失败', $validate->getError(), 4000);
         }
-        //获取短信
+        // 获取短信
+        // type=3为vip号码，如果是未登陆的用户，返回3000
         $redis = RedisController::getInstance('sync');
         $message_data = RedisController::zSetLatestMsg($redis, 'message:' . $data['phone_num']);
         if ($message_data) {
