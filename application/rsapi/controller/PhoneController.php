@@ -104,15 +104,16 @@ class PhoneController extends BaseController
         }
     }
 
-    public function report(Request $request){
-        $phone_num = input('post.phone_num');
+    public function report(Request $request): \think\response\Json
+    {
+        $phone_num = input('post.phone');
         $validate = Validate::make(['phone_num|phone'=>'must|number|max:15|min:6']);
         if(!$validate->check(['phone_num'=>$phone_num])){
             return show($validate->getError(), $validate->getError(), 4000);
         }
-        //把提交的号码保存进入redis. respore_1814266666
-        $redis = RedisController::getInstance('master');
-        $return = RedisController::stringIncrbyEx($redis, Config::get('cache.prefix') . 'report_' . $phone_num, 86400);
+        //把提交的号码保存进入redis. report:1814266666
+        $redis = RedisController::getInstance();
+        $return = RedisController::stringIncrbyEx($redis, Config::get('cache.prefix') . 'report:' . $phone_num, 86400);
         if (!$return){
             return show('提交反馈失败', '', 4000, $request->header);
         }
@@ -122,7 +123,8 @@ class PhoneController extends BaseController
         return show('反馈成功，等待处理', '', 0, $request->header);
     }
 
-    public function getUpcomingPhone(){
+    public function getUpcomingPhone(): \think\response\Json
+    {
         $result = (new PhoneModel())->getUpcomingNumber();
         if ($result > 0){
             return show('Request success', $result);
@@ -131,7 +133,8 @@ class PhoneController extends BaseController
         }
     }
 
-    public function getNewPhone(){
+    public function getNewPhone(): \think\response\Json
+    {
         $count = (new PhoneModel())->getNewPhone(15);
         if ($count > 0){
             return show('Request success', $count);

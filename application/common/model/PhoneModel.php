@@ -268,14 +268,15 @@ class PhoneModel extends BaseModel
     }
     
     //前台随机获取一个号码显示
-    public function getRandom(){
-        $result = self::with('country')
+    public function getRandom(): PhoneModel
+    {
+        return self::with('country')
             ->where('show', '=', 1)
             ->where('online', '=', 1)
+            ->where('type', '<', 3)
             ->whereIn('warehouse_id', '26,27')
             ->orderRand()
             ->find();
-        return $result;
     }
 
     /**
