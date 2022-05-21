@@ -20,8 +20,6 @@ class TokenController extends BaseController
      */
     public function getToken(): Json
     {
-        //$headers = getallheaders();
-        //trace($headers, 'notice');
         $salt = generateKey();
         $iv = generateIv();
         $aes_mode = Config::get('config.aes_mode');
@@ -33,7 +31,7 @@ class TokenController extends BaseController
         trace('firebase_user', 'notice');
         trace($firebase_user, 'notice');
         if (!$firebase_user){
-            return show('鉴权失败', '', 4003, '', 403);
+            return show('Exception', '', 4003, '', 403);
         }
 
         //登陆成功后，发放access_token refresh_token expires从response中返回
@@ -66,7 +64,7 @@ class TokenController extends BaseController
             $access_token = openssl_encrypt($access_token, Config::get('config.aes_mode'), generateKey(), 0, generateIv());
             $refresh_token = openssl_encrypt($refresh_token, Config::get('config.aes_mode'), generateKey(), 0, generateIv());
             if ($access_token && $refresh_token){
-                return show('登陆成功',
+                return show('Success',
                     ['access_token' => $access_token,
                         'refresh_token' => $refresh_token,
                         'access_token_expire'=> $redis->ttl($access_token_key),
@@ -77,7 +75,7 @@ class TokenController extends BaseController
             }
             //return show('登陆成功', ['access_token' => $access_token, 'refresh_token' => $refresh_token], 0, ['Expires'=>60]);
         }
-        return show('登陆失败', '', 4000, '', 403);
+        return show('Fail', '', 4000, '', 403);
     }
 
     /**
@@ -102,15 +100,13 @@ class TokenController extends BaseController
             //trace('密钥' . $iv, 'notice');
             $refresh_token = $this->checkRefreshToken($refresh_token_code, generateKey(), generateIv($iv));
             if($refresh_token){
-                trace('验证密钥成功' . $iv, 'notice');
                 $num++;
                 //break;
-            }else{
-                trace('验证密钥失败' . $iv, 'notice');
             }
         }
         if ($num == 0){
-            return show('鉴权失败-refresh错误', '', 4004);
+            //鉴权失败-refresh错误
+            return show('Exception', '', 4004);
         }
 
         $redis = RedisController::getInstance();
@@ -135,10 +131,10 @@ class TokenController extends BaseController
                 $redis->expire($refresh_token_key, Config::get('config.refresh_token_expires'));
             }
 
-            return show('签发成功', ['accessToken' => $access_token, 'accessTokenExpire' => $redis->ttl($cache_prefix . 'accessToken:' . $access_token)]);
+            return show('Success', ['accessToken' => $access_token, 'accessTokenExpire' => $redis->ttl($cache_prefix . 'accessToken:' . $access_token)]);
             //return show('签发成功', $access_token, 0, ['Expires'=>60]);
         } else {
-            return show('签发失败', '', 4000);
+            return show('Fail', '', 4000);
         }
     }
 
@@ -160,9 +156,9 @@ class TokenController extends BaseController
     {
         $result = $this->delTokenByAccess();
         if ($result > 0) {
-            return show('登出成功');
+            return show('Success');
         } else {
-            return show('登陆失败', '', 4000);
+            return show('Fail', '', 4000);
         }
     }
 

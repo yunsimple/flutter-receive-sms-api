@@ -34,7 +34,7 @@ class RedisController
      * @return \Redis
      * @author limx
      */
-    public static function getInstance(string $select = 'local', int $db = 0, string $uniqID = null)
+    public static function getInstance(string $select = 'local', int $db = 0, string $uniqID = null): \Redis
     {
         if ($select == 'sync'){
             $host = Config::get('config.sync_host');

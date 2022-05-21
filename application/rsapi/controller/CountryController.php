@@ -20,7 +20,7 @@ class CountryController extends BaseController
         $data['page'] = input('post.page');
         //数据校验
         $validate = Validate::make([
-            'page|页数' => 'integer|max:4'
+            'page|page' => 'integer|max:4'
         ]);
         if (!$validate->check($data)) {
             return show($validate->getError(), $validate->getError(), 4000);
@@ -28,12 +28,12 @@ class CountryController extends BaseController
         $page = ($data['page']) ? $data['page'] : 1 ;
         $country_data = (new CountryModel())->appGetCountry($page, 12, $language);
         if ($country_data){
-            if ($country_data->isEmpty()){
-                return show('没有找到数据', '', 3000, $request->header);
+            if ($country_data == 'null'){
+                return show('No data', '', 3000, $request->header);
             }
-            return show('获取成功', $country_data, 0, $request->header);
+            return show('Success', $country_data, 0, $request->header);
         }else{
-            return show('国家列表获取失败', '', 4000);
+            return show('Fail', '', 4000);
         }
     }
 }

@@ -2,6 +2,7 @@
 namespace app\rsapi\controller;
 
 
+use app\common\model\PhoneModel;
 use app\common\model\UserSmsModel;
 use think\Validate;
 
@@ -43,7 +44,7 @@ class UserController extends BaseController
      */
     public function getMy(): \think\response\Json
     {
-        return show('获取成功', ['upcomingTime'=> 1653055200, 'version'=> 1.6]);
+        return show('Success', ['upcomingTime'=> (int) (new PhoneModel())->getUpcomingTime(), 'version'=> 1.6]);
     }
 
     /**

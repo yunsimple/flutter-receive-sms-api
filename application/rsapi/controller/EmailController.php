@@ -25,10 +25,7 @@ class EmailController extends BaseController
         $email = input('post.email');
         $validate = Validate::checkRule($email, 'must|email|max:30|min:10');
         if (!$validate){
-            return show('传递参数异常', $email, 4000);
-        }
-        if ($email == 'admin@yinsiduanxin.com'){
-            return show('传递参数异常', $email, 4000);
+            return show('Exception', $email, 4000);
         }
         $bt = new BtEmailServer();
         $result = $bt->getEmail($email);
@@ -36,9 +33,7 @@ class EmailController extends BaseController
             if (count($result['data']) > 0){
                 //判断是否存在需要过滤的邮件发布商
                 $str = [
-                    'alipay@mail.alipay.com',
-                    'service@mc.mail.taobao.com',
-                    'noreply@suningnews.com',
+
                 ];
                 foreach ($result['data'] as $key => $value){
                     (RedisController::getInstance())->incr('mail_receive_total');
@@ -49,13 +44,13 @@ class EmailController extends BaseController
                         }
                     }
                 }
-                return show('获取邮件成功', $result['data'], 0, $request->header);
+                return show('Success', $result['data'], 0, $request->header);
             }else{
-                return show('服务器还未收到邮件','', 3000, $request->header);
+                return show('No data','', 3000, $request->header);
             }
 
         }else{
-            return show('获取失败:', $email, 4000, $request->header);
+            return show('Fail:', $email, 4000, $request->header);
         }
     }
 
@@ -70,7 +65,7 @@ class EmailController extends BaseController
         }else{
             $validate = Validate::checkRule($user, 'must|alphaDash|max:24|min:6');
             if(!$validate){
-                return show('传递参数异常', $user, 4000);
+                return show('Exception', $user, 4000);
             }
         }
         $bt = new BtEmailServer();
@@ -78,9 +73,9 @@ class EmailController extends BaseController
         if ($result['status']){
             Session::set('email', $user . $site);
             (RedisController::getInstance())->incr('mail_user_total');
-            return show('申请成功', $user . $site, 0, $request->header);
+            return show('Success', $user . $site, 0, $request->header);
         }else{
-            return show('申请失败，请换个帐号试试', $result, 4000, $request->header);
+            return show('Failed to apply, please try another account', $result, 4000, $request->header);
         }
     }
 
@@ -93,9 +88,7 @@ class EmailController extends BaseController
         if (!$validate){
             return show(Lang::get('mail_alert_abnormal'), $email, 4000);
         }
-        if ($email == 'admin@yinsiduanxin.com'){
-            return show('传递参数异常', $email, 4000);
-        }
+
         $bt = new BtEmailServer();
         if ($transpond_email){
             $validate = Validate::checkRule($transpond_email, 'email|max:50|min:10');
@@ -107,9 +100,9 @@ class EmailController extends BaseController
         $result = $bt->emailUserDelete($email);
         if ($result['status']){
             Session::delete('email');
-            return show('邮箱销毁成功',$email, 0, $request->header);
+            return show('Success',$email, 0, $request->header);
         }else{
-            return show('邮箱销毁失败，请重试:', $email, 4000, $request->header);
+            return show('Fail', $email, 4000, $request->header);
         }
     }
 
@@ -166,7 +159,7 @@ class EmailController extends BaseController
         $result = $bt->setTranspondEmail('recipient', $email_domin, $email, $transpond_email);
         //dump($result);
         if ($result['msg'] == '被转发用户已经存在'){
-            return show(Lang::get('已经存在转发地址'), $validate->getError(), 4000, $request->header);
+            return show(Lang::get('The user being forwarded already exists'), $validate->getError(), 4000, $request->header);
         }
         if ($result['status']){
             return show(Lang::get('mail_alert_transpond_email_success'), $transpond_email, 0, $request->header);

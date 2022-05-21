@@ -23,5 +23,10 @@ return [
     //状态码
     'empty' => 3000, //数据为空
     'auth' => 3001, //需要重新请求/login 获取token
+    'upcoming_number' => 3003, // type = 2 预告号码
+    'vip_number' => 3004, //type = 3 vip号码
     'no_permission' => 4003, //没有权限
+
+    'language' => ['tw','en'],  //目前api开放的语言
+
 ];

@@ -19,39 +19,38 @@ class FavoritesController extends BaseController
         $phone = input('post.phone');
         $validate = Validate::checkRule($phone, 'must|number|max:15|min:1');
         if (!$validate){
-            return show('传递参数异常', $phone, 4000);
+            return show('Exception', $phone, 4000);
         }
 
-        $access_token = $request->header()['access-token'];
-        $user_id = (new FirebaseUserModel())->getUserInfoByAccessToken($access_token, 'user_id');
+        $user_id = (new FirebaseUserModel())->getUserInfoByAccessToken('', 'user_id');
 
         $favorites_key = Config::get('cache.prefix') . 'favorites:' . $user_id;
-        $redis = RedisController::getInstance();
+        $redis = RedisController::getInstance('master');
         try {
-            $redis->sAdd($favorites_key, $phone);
-            return show('收藏成功');
+            $value = $redis->sAdd($favorites_key, $phone);
+            return show('Success', $value);
         } catch(\Exception $e){
-            return show('收藏失败','', 4000);
+            return show('Fail','', 4000);
         }
     }
 
-    public function del(Request $request){
+    public function del(Request $request): \think\response\Json
+    {
         $phone = input('post.phone');
         $validate = Validate::checkRule($phone, 'must|number|max:15|min:1');
         if (!$validate){
-            return show('传递参数异常', $phone, 4000);
+            return show('Exception', $phone, 4000);
         }
 
-        $access_token = $request->header()['access-token'];
-        $user_id = (new FirebaseUserModel())->getUserInfoByAccessToken($access_token, 'user_id');
+        $user_id = (new FirebaseUserModel())->getUserInfoByAccessToken('', 'user_id');
 
         $favorites_key = Config::get('cache.prefix') . 'favorites:' . $user_id;
-        $redis = RedisController::getInstance();
+        $redis = RedisController::getInstance('master');
         try {
             $redis->sRem($favorites_key, $phone);
-            return show('移除收藏成功');
+            return show('Success');
         } catch(\Exception $e){
-            return show('移除收藏失败','', 4000);
+            return show('Fail','', 4000);
         }
 
     }

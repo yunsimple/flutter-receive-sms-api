@@ -4,44 +4,62 @@ namespace app\rsapi\controller;
 
 use app\common\controller\RedisController;
 use app\common\model\FirebaseUserModel;
+use app\common\model\PhoneModel;
 use think\facade\Config;
 use think\Request;
 use think\Validate;
 
 class MessageController extends BaseController
 {
-    protected $middleware = ['AuthApp'];
+    //protected $middleware = ['AuthApp'];
     protected $header = []; //自定义response返回header
 
-    public function getMessage(Request $request){
+    public function getMessage(Request $request): \think\response\Json
+    {
         $data['phone_num'] = input('post.phone');
         //校验手机号码
         $validate = Validate::make([
-            'phone_num|手机号码' => 'require|number|min:5|max:15'
+            'phone_num|number' => 'require|number|min:5|max:15'
         ]);
         if (!$validate->check($data)) {
-            return show('短信获取失败', $validate->getError(), 4000);
+            return show('Fail', $validate->getError(), 4000);
         }
+
+        $user_info = (new FirebaseUserModel())->getUserInfoByAccessToken();
+
+        // 判断该号码是否被收藏
+        // todo 上线，需要更改master为sync
+        $redis_sync = RedisController::getInstance('master');
+        $is_favorites = $redis_sync->sIsMember(Config::get('cache.prefix') . 'favorites:' . $user_info['user_id'], $data['phone_num']);
+
+        // 判断该号码类型，type = 1 正常 2 预告号码 3 vip号码
+        $phone_detail = (new PhoneModel())->getPhoneDetail($data['phone_num']);
+        if ($phone_detail['type'] == '2'){
+            // 预告号码
+            return show('Comping number',['info' =>
+                ['upcomingTime'=> (new PhoneModel())->getUpcomingTime(), 'favorites' => $is_favorites]
+            ], 3003);
+        }
+
+        if ($phone_detail['type'] == '3'){
+            // vip号码，判断该用户是否有权使用，如果没有权限，则返回3004
+            return show('vip number',['info' =>
+                ['favorites' => $is_favorites]
+            ], 3004);
+        }
+
         // 获取短信
-        // type=3为vip号码，如果是未登陆的用户，返回3000
         $redis = RedisController::getInstance('sync');
         $message_data = RedisController::zSetLatestMsg($redis, 'message:' . $data['phone_num']);
         if ($message_data) {
             if ($message_data == 'null'){
-                return show('没有找到数据', '', 3000, $request->header);
+                return show('No data',['info' =>
+                    ['favorites' => $is_favorites]
+                ], 3000);
             }
-            // 判断该号码是否被收藏
-            $access_token = $request->header()['access-token'];
-            $user_info = (new FirebaseUserModel())->getUserInfoByAccessToken($access_token);
-            $is_favorites = false;
-            if (array_key_exists('email', $user_info)){
-                // 去redis缓存里面查询
-                $redis6379 = RedisController::getInstance();
-                $is_favorites = $redis6379->sIsMember(Config::get('cache.prefix') . 'favorites:' . $user_info['user_id'], $data['phone_num']);
-            }
-            return show('获取成功', ['message'=>$message_data,'info'=>['favorites'=>$is_favorites]], 0, $request->header);
+            return show('Success', ['message'=>$message_data,'info'=>['favorites'=>$is_favorites]], 0, $request->header);
         }else{
-            return show('短信获取失败，请稍候再试', '', 4000, $request->header);
+            return show('Fail', '', 4000, $request->header);
         }
     }
 }

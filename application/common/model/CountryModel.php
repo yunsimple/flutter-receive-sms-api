@@ -3,6 +3,7 @@
 namespace app\common\model;
 
 
+use think\facade\Config;
 use think\facade\Request;
 
 class CountryModel extends BaseModel
@@ -17,14 +18,24 @@ class CountryModel extends BaseModel
             // todo 线上需要切换
             //->cache(3600)
             ->select();
-
-        // app需要当前语言的名称
-        $app_language = $language . '_title';
-        $data = $result->visible(['title',$app_language, 'bh', 'id']);
-        foreach ($data as $key=>$value){
-            $data[$key]['title'] = $value[$language . '_title'];
-            unset($data[$key][$language . '_title']);
+        if ($result->isEmpty()){
+            return 'null';
         }
-        return $data;
+        // 取得所有当前支持的语言包，然后在缓存后供筛选
+        $app_language = Config::get('config.language');
+        $filed = ['title', 'bh', 'id'];
+        foreach ($app_language as $value){
+            $filed[] = $value . '_title';
+        }
+        $data = $result->visible($filed);
+        $new_data = [];
+        foreach ($data as $key=>$value){
+            //dump($value);
+            // 更改获取到的语言字段 en_title 改成title
+            $new_data[$key]['id'] = $value['id'];
+            $new_data[$key]['bh'] = $value['bh'];
+            $new_data[$key]['title'] = $value[$language . '_title'];
+        }
+        return $new_data;
     }
 }

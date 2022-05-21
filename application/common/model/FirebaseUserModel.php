@@ -37,7 +37,10 @@ class FirebaseUserModel extends BaseModel
     }
 
     //根据accessToken查询账户信息
-    public function getUserInfoByAccessToken($access_token, $search = 'all'){
+    public function getUserInfoByAccessToken($access_token = '', $search = 'all'){
+        if ($access_token == ''){
+            $access_token = getallheaders()['Access-Token'];
+        }
         $access_token_key = Config::get('cache.prefix') . 'accessToken:' . $access_token;
         $redis = RedisController::getInstance();
         $refresh_token = $redis->hGet($access_token_key, 'refreshToken');
