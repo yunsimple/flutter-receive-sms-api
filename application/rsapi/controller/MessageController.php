@@ -11,7 +11,7 @@ use think\Validate;
 
 class MessageController extends BaseController
 {
-    //protected $middleware = ['AuthApp'];
+    protected $middleware = ['AuthApp'];
     protected $header = []; //自定义response返回header
 
     public function getMessage(Request $request): \think\response\Json
@@ -31,20 +31,27 @@ class MessageController extends BaseController
         // todo 上线，需要更改master为sync
         $redis_sync = RedisController::getInstance('master');
         $is_favorites = $redis_sync->sIsMember(Config::get('cache.prefix') . 'favorites:' . $user_info['user_id'], $data['phone_num']);
-
+        $online = (new PhoneModel())->getPhoneDetail($data['phone_num'], 'online') == 1;
         // 判断该号码类型，type = 1 正常 2 预告号码 3 vip号码
         $phone_detail = (new PhoneModel())->getPhoneDetail($data['phone_num']);
         if ($phone_detail['type'] == '2'){
             // 预告号码
             return show('Comping number',['info' =>
-                ['upcomingTime'=> (new PhoneModel())->getUpcomingTime(), 'favorites' => $is_favorites]
+                [
+                    'upcomingTime'=> (new PhoneModel())->getUpcomingTime(),
+                    'favorites' => $is_favorites,
+                    'online' => $online
+                ]
             ], 3003);
         }
 
         if ($phone_detail['type'] == '3'){
             // vip号码，判断该用户是否有权使用，如果没有权限，则返回3004
             return show('vip number',['info' =>
-                ['favorites' => $is_favorites]
+                [
+                    'favorites' => $is_favorites,
+                    'online' => $online
+                ]
             ], 3004);
         }
 
@@ -54,10 +61,20 @@ class MessageController extends BaseController
         if ($message_data) {
             if ($message_data == 'null'){
                 return show('No data',['info' =>
-                    ['favorites' => $is_favorites]
+                    [
+                        'favorites' => $is_favorites,
+                        'online' => $online
+                    ]
                 ], 3000);
             }
-            return show('Success', ['message'=>$message_data,'info'=>['favorites'=>$is_favorites]], 0, $request->header);
+            return show('Success',
+                [
+                    'message'=>$message_data,
+                    'info'=>[
+                        'favorites'=>$is_favorites,
+                        'online' => $online
+                    ]
+            ], 0, $request->header);
         }else{
             return show('Fail', '', 4000, $request->header);
         }

@@ -44,8 +44,8 @@ class PhoneModel extends BaseModel
             $result = self::with('country')
                 ->where('show', '=', 1)
                 ->where('type', '=', 1)
-                ->where('online', '=', 1)
-                ->order('online', 'desc')
+                //->where('online', '=', 1)
+                //->order('online', 'desc')
                 ->order('sort', 'desc')
                 ->order('id', 'desc')
                 ->page($page, $limit)
@@ -53,10 +53,9 @@ class PhoneModel extends BaseModel
         }elseif ($country_id == 'upcoming'){
             $result = self::with('country')
                 ->where('show', '=', 1)
-                ->where('online', '=', 1)
                 ->where('type', '=', 2)
-                ->where('online', '=', 1)
-                ->order('online', 'desc')
+                //->where('online', '=', 1)
+                //->order('online', 'desc')
                 ->order('sort', 'desc')
                 ->order('id', 'desc')
                 ->page($page, $limit)
@@ -69,9 +68,9 @@ class PhoneModel extends BaseModel
             $phones = $redis_sync->sMembers($favorites_set_key);
             $result = self::with('country')
                 ->where('show', '=', 1)
-                ->where('online', '=', 1)
+                //->where('online', '=', 1)
                 ->whereIn('phone_num', $phones)
-                ->order('online', 'desc')
+                //->order('online', 'desc')
                 ->order('sort', 'desc')
                 ->order('id', 'desc')
                 ->page($page, $limit)
@@ -80,8 +79,8 @@ class PhoneModel extends BaseModel
             $result = self::with('country')
                 ->where('show', '=', 1)
                 ->where('type', '=', 3)
-                ->where('online', '=', 1)
-                ->order('online', 'desc')
+                //->where('online', '=', 1)
+                //->order('online', 'desc')
                 ->order('sort', 'desc')
                 ->order('id', 'desc')
                 ->page($page, $limit)
@@ -91,8 +90,8 @@ class PhoneModel extends BaseModel
                 ->where('country_id', 'in', $country_id)
                 ->where('show', '=', 1)
                 ->where('type', '=', 1)
-                ->where('online', '=', 1)
-                ->order('online', 'desc')
+                //->where('online', '=', 1)
+                //->order('online', 'desc')
                 ->order('sort', 'desc')
                 ->order('id', 'desc')
                 ->page($page, $limit)
@@ -112,11 +111,14 @@ class PhoneModel extends BaseModel
     }
 
     //重构，查询号码详情，并缓存
-    public function getPhoneDetail($phone_num){
+    public function getPhoneDetail($phone_num, $field = ''){
         // todo web和app如果有重复的号码，那phone_detail就需要放在不同的目录
         $phone_detail_key = Config::get('cache.prefix') . 'phone_detail:' . $phone_num;
         $result = RedisController::getInstance('sync')->get($phone_detail_key);
         if ($result){
+            if ($field){
+                return unserialize($result)[$field];
+            }
             return unserialize($result);
         }else{
             $result = self::with(['country', 'warehouse'])
@@ -124,8 +126,11 @@ class PhoneModel extends BaseModel
                 ->where('show', '=', 1)
                 ->find();
             if ($result && !$result->isEmpty()){
-                $result = $result->visible(['id', 'phone_num','type', 'total_num', 'show', 'country.id', 'country.en_title', 'country.title', 'country.bh', 'warehouse.title'])->toArray();
+                $result = $result->visible(['id','online', 'phone_num','type', 'total_num', 'show', 'country.id', 'country.en_title', 'country.title', 'country.bh', 'warehouse.title'])->toArray();
                 RedisController::getInstance('master')->set($phone_detail_key, serialize($result));
+                if ($field){
+                    return $result[$field];
+                }
                 return $result;
             }else{
                 return false;
