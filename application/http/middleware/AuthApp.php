@@ -54,7 +54,7 @@ class AuthApp extends Controller
             $redis->hIncrBy($refresh_token_key, 'requestNumber', 1);
 
             //传出一个token的有效时间，其他控制器使用
-            $request->Expires = ['Expires' => $redis->ttl($access_token_key)];
+            $request->header = ['expires' => $redis->ttl($access_token_key)];
         }
         //传出app使用的语言，默认为英文
         if (array_key_exists('Language', $headers)){
