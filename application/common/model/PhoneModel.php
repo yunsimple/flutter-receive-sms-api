@@ -126,7 +126,7 @@ class PhoneModel extends BaseModel
                 ->where('show', '=', 1)
                 ->find();
             if ($result && !$result->isEmpty()){
-                $result = $result->visible(['id','online', 'phone_num','type', 'total_num', 'show', 'country.id', 'country.en_title', 'country.title', 'country.bh', 'warehouse.title'])->toArray();
+                $result = $result->visible(['id','online','price', 'phone_num','type', 'total_num', 'show', 'country.id', 'country.en_title', 'country.title', 'country.bh', 'warehouse.title'])->toArray();
                 RedisController::getInstance('master')->set($phone_detail_key, serialize($result));
                 if ($field){
                     return $result[$field];
@@ -140,8 +140,7 @@ class PhoneModel extends BaseModel
 
     //获取upcoming号码数据
     public function getUpcomingNumber(){
-        return self::where('display', 1)
-            ->where('online', 1)
+        return self::where('online', 1)
             ->where('show', 1)
             ->where('type', 2)
             ->cache('upcoming_number',1800)
@@ -151,8 +150,7 @@ class PhoneModel extends BaseModel
     // 获取最近多长时间最新上线的号码
     public function getNewPhone($day = 15){
         $time = time();
-        return self::where('display', 1)
-            ->where('online', 1)
+        return self::where('online', 1)
             ->where('show', 1)
             //->where('type', 2)
             ->whereTime('create_time', 'between', [$time-($day*86400),$time])

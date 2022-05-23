@@ -3,6 +3,7 @@
 namespace app\rsapi\controller;
 
 use app\common\controller\RedisController;
+use app\common\model\AdOrderModel;
 use app\common\model\FirebaseUserModel;
 use app\common\model\PhoneModel;
 use think\facade\Config;
@@ -45,12 +46,20 @@ class MessageController extends BaseController
             ], 3003);
         }
 
-        if ($phone_detail['type'] == '3'){
+        // 判断该用户，是否已经付费了
+        $isBuy = AdOrderModel::where('user_id',$user_info['user_id'])
+            ->where('phone_num', $data['phone_num'])
+            ->cache(3600)
+            ->find();
+
+        if ($phone_detail['type'] == '3' && !$isBuy){
             // vip号码，判断该用户是否有权使用，如果没有权限，则返回3004
             return show('vip number',['info' =>
                 [
                     'favorites' => $is_favorites,
-                    'online' => $online
+                    'online' => $online,
+                    'price' => (int) (new PhoneModel())->getPhoneDetail($data['phone_num'], 'price'),
+                    'coins' => (int) (new FirebaseUserModel())->where('user_id', $user_info['user_id'])->value('coins')
                 ]
             ], 3004);
         }

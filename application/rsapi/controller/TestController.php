@@ -3,16 +3,17 @@ namespace app\rsapi\controller;
 
 use app\common\controller\FirebaseJwtController;
 use app\common\controller\RedisController;
+use app\common\model\AdOrderModel;
 use think\facade\Request;
 
 class TestController
 {
     public function index(){
-        $arr = ['id', 'phone_num', 'total_num', 'show', 'country.id', 'country_title', 'country.bh'];
-        $config_arr = config('config.language');
-        foreach ($config_arr as $value){
-            $arr[] = $value;
+        $isBuy = AdOrderModel::where('user_id','N3mAWR1Gr6OK1oikGSJn1hVuELq11')->cache(3600)->find();
+        if ($isBuy){
+            echo 1;
+        }else{
+            echo 0;
         }
-        print_r($arr);
     }
 }

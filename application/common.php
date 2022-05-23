@@ -318,3 +318,5 @@ function generateIv($iv = ''){
     }
     return $iv;
 }
+
+// 反向检测

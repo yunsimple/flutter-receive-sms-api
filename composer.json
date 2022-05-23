@@ -16,7 +16,7 @@
         }
     ],
     "require": {
-        "php": ">=7.0",
+        "php": ">=7.4",
         "topthink/framework": "5.1.*",
         "kreait/firebase-tokens": "^1.15",
       "ext-openssl": "*",

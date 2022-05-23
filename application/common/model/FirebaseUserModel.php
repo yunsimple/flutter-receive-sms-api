@@ -36,19 +36,29 @@ class FirebaseUserModel extends BaseModel
             ->select();
     }
 
-    //根据accessToken查询账户信息
+    //根据accessToken查询refreshToken里面存放的账户信息
     public function getUserInfoByAccessToken($access_token = '', $search = 'all'){
         if ($access_token == ''){
             $access_token = getallheaders()['Access-Token'];
         }
         $access_token_key = Config::get('cache.prefix') . 'accessToken:' . $access_token;
-        $redis = RedisController::getInstance();
-        $refresh_token = $redis->hGet($access_token_key, 'refreshToken');
+        $redis_sync = RedisController::getInstance();
+        $refresh_token = $redis_sync->hGet($access_token_key, 'refreshToken');
         $refresh_token_key = Config::get('cache.prefix') . 'refreshToken:' . $refresh_token;
         if ($search == 'all'){
-            return $redis->hGetAll($refresh_token_key);
+            return $redis_sync->hGetAll($refresh_token_key);
         }else{
-            return $redis->hGet($refresh_token_key, $search);
+            return $redis_sync->hGet($refresh_token_key, $search);
         }
     }
+
+    public function getRefreshTokenByAccessToken($access_token = ''){
+        if ($access_token == ''){
+            $access_token = getallheaders()['Access-Token'];
+        }
+        $access_token_key = Config::get('cache.prefix') . 'accessToken:' . $access_token;
+        $redis_sync = RedisController::getInstance();
+        return $redis_sync->hGet($access_token_key, 'refreshToken');
+    }
+
 }
