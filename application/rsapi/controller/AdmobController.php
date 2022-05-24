@@ -19,7 +19,7 @@ class AdmobController extends BaseController
     ];
 
     // rewarded回调
-    public function admobRewardedCall(): Json
+    public function admobRewardedCall()
     {
         // todo 安全性处理，根据signature，进行解密验证，反向DNS验证
         // todo 是否会重复回调，导致金额重复增加
@@ -100,7 +100,8 @@ class AdmobController extends BaseController
             $result = (new AdOrderModel())->cache(3600)->insert($buy_data_order);
             if ($result == 1){
                 Db::commit();
-                $new_coins = (new FirebaseUserModel())->where('user_id', $user_id)->cache($user_id, 3600)->value('coins');
+                // todo 上线增加缓存
+                $new_coins = (new FirebaseUserModel())->where('user_id', $user_id)->value('coins');
                 return show('Success', ['info' => ['coins' => (int) $new_coins]]);
             }else{
                 return show('Fail');
@@ -118,7 +119,10 @@ class AdmobController extends BaseController
     {
         $firebase_user_model = (new FirebaseUserModel());
         $user_id = $firebase_user_model->getUserInfoByAccessToken('', 'user_id');
-        $coins = $firebase_user_model->where('user_id', $user_id)->cache($user_id, 3600)->value('coins');
+        // todo 上线增加缓存
+        $coins = $firebase_user_model->where('user_id', $user_id)->value('coins');
+        trace($user_id, 'notice');
+        trace($coins, 'notice');
         if ($coins){
             return show('Success', ['info' => ['coins' => (int) $coins]]);
         }else{

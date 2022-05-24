@@ -1,7 +1,8 @@
 /.idea
 /.vscode
-/vendor
+/public/*.apk
+/public/*.zip
+/public/*.rar
 *.log
-thinkphp
 .env
 .DS_Store

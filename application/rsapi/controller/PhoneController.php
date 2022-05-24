@@ -64,7 +64,7 @@ class PhoneController extends BaseController
                 $phone_data[$key]['country']['title'] = $title;
 
                 $update_time = $redis_sync->zRange('message:'.$value['phone_num'], -1, -1);
-                if (count($update_time) > 0){
+                if (is_array($update_time) && count($update_time) > 0){
                     $update_time = unserialize($update_time[0]);
                 }else{
                     $update_time['smsDate'] = (int) time() - 86400;
