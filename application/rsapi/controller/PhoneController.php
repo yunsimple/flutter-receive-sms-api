@@ -12,7 +12,7 @@ use think\Validate;
 
 class PhoneController extends BaseController
 {
-    protected $middleware = ['AuthApp'];
+    protected array $middleware = ['AuthApp'];
     protected $header = []; //自定义response返回header
     /**
      * 根据国家获取号码列表
