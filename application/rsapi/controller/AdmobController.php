@@ -14,8 +14,12 @@ use think\Validate;
 
 class AdmobController extends BaseController
 {
+    protected array $middleware = [
+        'AuthApp' => ['except' => ['admobRewardedCall']],
+    ];
+
     // rewarded回调
-    public function admobRewardedCall()
+    public function admobRewardedCall(): Json
     {
         // todo 安全性处理，根据signature，进行解密验证，反向DNS验证
         // todo 是否会重复回调，导致金额重复增加

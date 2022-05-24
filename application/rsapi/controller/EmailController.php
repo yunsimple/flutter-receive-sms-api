@@ -11,7 +11,7 @@ use think\Request;
 
 class EmailController extends BaseController
 {
-    protected $middleware = ['AuthApp'];
+    protected array $middleware = ['AuthApp'];
     protected $header = []; //自定义response返回header
     
     //获取当前生效的邮箱后坠
