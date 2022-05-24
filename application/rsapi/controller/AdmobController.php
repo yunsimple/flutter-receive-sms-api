@@ -14,7 +14,7 @@ use think\Validate;
 
 class AdmobController extends BaseController
 {
-    protected $middleware = [
+    protected array $middleware = [
         'AuthApp' => ['except' => ['admobRewardedCall']],
     ];
 

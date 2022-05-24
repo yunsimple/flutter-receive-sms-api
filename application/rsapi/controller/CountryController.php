@@ -8,9 +8,9 @@ use think\Validate;
 
 class CountryController extends BaseController
 {
-    protected $middleware = ['AuthApp'];
+    protected array $middleware = ['AuthApp'];
 
-    protected $header = []; //自定义response返回header
+    protected array $header = []; //自定义response返回header
     /**
      * 获取所有在线国家列表
      */
