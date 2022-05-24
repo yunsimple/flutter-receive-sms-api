@@ -10,7 +10,7 @@ use think\Request;
 
 class FavoritesController extends BaseController
 {
-    protected array $middleware = ['AuthApp'];
+    protected $middleware = ['AuthApp'];
     protected $header = []; //自定义response返回header
 
     // 写入redis set

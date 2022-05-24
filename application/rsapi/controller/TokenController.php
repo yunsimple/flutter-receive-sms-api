@@ -13,7 +13,7 @@ use think\Exception;
 
 class TokenController extends BaseController
 {
-    protected array $middleware = ['AuthApp'];
+    protected $middleware = ['AuthApp'];
 
     /**
      * 签发accessToken和refreshToken /login
