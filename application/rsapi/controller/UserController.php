@@ -11,7 +11,7 @@ use think\Validate;
 
 class UserController extends BaseController
 {
-    protected array $middleware = [
+    protected $middleware = [
         'AuthApp' => ['only' => ['getMy']],
         //'AuthUserApp'=> ['only'=>['getMy']]
     ];

@@ -12,7 +12,7 @@ use think\Validate;
 
 class MessageController extends BaseController
 {
-    protected array $middleware = ['AuthApp'];
+    protected $middleware = ['AuthApp'];
     protected $header = []; //自定义response返回header
 
     public function getMessage(Request $request): \think\response\Json

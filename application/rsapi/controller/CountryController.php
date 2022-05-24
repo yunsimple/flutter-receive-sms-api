@@ -8,7 +8,7 @@ use think\Validate;
 
 class CountryController extends BaseController
 {
-    protected array $middleware = ['AuthApp'];
+    protected $middleware = ['AuthApp'];
 
     protected $header = []; //自定义response返回header
     /**
