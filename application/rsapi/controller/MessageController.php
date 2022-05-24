@@ -59,7 +59,10 @@ class MessageController extends BaseController
                     'favorites' => $is_favorites,
                     'online' => $online,
                     'price' => (int) (new PhoneModel())->getPhoneDetail($data['phone_num'], 'price'),
-                    'coins' => (int) (new FirebaseUserModel())->where('user_id', $user_info['user_id'])->value('coins')
+                    'coins' => (int) (new FirebaseUserModel())
+                        ->where('user_id', $user_info['user_id'])
+                        ->cache($user_info['user_id'], 3600)
+                        ->value('coins')
                 ]
             ], 3004);
         }

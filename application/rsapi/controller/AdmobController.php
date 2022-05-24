@@ -41,14 +41,14 @@ class AdmobController extends BaseController
         // 增加余额，然后写入订单凭证
         Db::startTrans();
         try {
-            $result = (new FirebaseUserModel())->where('user_id', '=', $call_info['user_id'])->setInc('coins', $call_info['reward_amount']);
+            $result = (new FirebaseUserModel())->where('user_id', '=', $call_info['user_id'])
+                ->cache($call_info['user_id'], 3600)
+                ->setInc('coins', $call_info['reward_amount']);
             if ($result){
                 // 获取accessToken,找到refreshToken
                 (new AdOrderModel())->insertOrder($mysql_data);
-                $refresh_token = (new FirebaseUserModel())->getRefreshTokenByAccessToken();
-                $redis_sync = RedisController::getInstance();
-                $redis_sync->hIncrBy(Config::get('cache.prefix') . 'refreshToken:' . $refresh_token, 'coins', $call_info['reward_amount']);
                 Db::commit();
+                return show('Success');
             }
         } catch (\Exception $e) {
             Db::rollback();
@@ -72,21 +72,17 @@ class AdmobController extends BaseController
 
         // 查看该用户Coins是否足够支付
         $firebase_user_model = new FirebaseUserModel();
-        $coins = (int) $firebase_user_model->getUserInfoByAccessToken('', 'coins');
+        $user_id = $firebase_user_model->getUserInfoByAccessToken('', 'user_id');
+        $coins = (int) $firebase_user_model->where('user_id', $user_id)->cache($user_id, 3600)->value('coins');
         $price = (int) (new PhoneModel())->getPhoneDetail($data['phone_num'], 'price');
         if (!$coins || !$price || $coins < $price){
-            return show('Not enough coins', ['coins' => $coins, 'price' => $price], 3005);
+            return show('Not enough coins', ['info' => ['coins' => $coins, 'price' => $price]], 3005);
         }
 
         // 检查通过，扣除金币
         Db::startTrans();
         try{
-            $user_id = $firebase_user_model->getUserInfoByAccessToken('', 'user_id');
-            $firebase_user_model->where('user_id', $user_id)->setDec('coins', $price);
-            $refresh_token = (new FirebaseUserModel())->getRefreshTokenByAccessToken();
-            $redis_sync = RedisController::getInstance();
-            $refresh_token_key = Config::get('cache.prefix') . 'refreshToken:' . $refresh_token;
-            $redis_sync->hIncrBy($refresh_token_key, 'coins', -$price);
+            $firebase_user_model->where('user_id', $user_id)->cache($user_id, 3600)->setDec('coins', $price);
 
             // 记录购买号码订单
             $buy_data_order = [
@@ -97,10 +93,11 @@ class AdmobController extends BaseController
                 'update_time' => time(),
                 'type' => 2,
             ];
-            $result = (new AdOrderModel())->insert($buy_data_order);
+            $result = (new AdOrderModel())->cache(3600)->insert($buy_data_order);
             if ($result == 1){
                 Db::commit();
-                return show('Success', ['info' => ['coins' => (int) $redis_sync->hGet($refresh_token_key,'coins')]]);
+                $new_coins = (new FirebaseUserModel())->where('user_id', $user_id)->cache($user_id, 3600)->value('coins');
+                return show('Success', ['info' => ['coins' => (int) $new_coins]]);
             }else{
                 return show('Fail');
             }
@@ -109,6 +106,19 @@ class AdmobController extends BaseController
             trace('coins扣除失败', 'error');
             trace($e->getMessage(), 'error');
             return show('Fail');
+        }
+    }
+
+    // 获取金币数量
+    public function getCoins(): Json
+    {
+        $firebase_user_model = (new FirebaseUserModel());
+        $user_id = $firebase_user_model->getUserInfoByAccessToken('', 'user_id');
+        $coins = $firebase_user_model->where('user_id', $user_id)->cache($user_id, 3600)->value('coins');
+        if ($coins){
+            return show('Success', ['info' => ['coins' => (int) $coins]]);
+        }else{
+            return show('Fail', '', 4000);
         }
     }
 

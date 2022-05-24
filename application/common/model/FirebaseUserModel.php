@@ -20,11 +20,13 @@ class FirebaseUserModel extends BaseModel
     //获取某个字段的值
     public function getFieldValueByUser($user, $field){
         return self::where('user', $user)
+            ->cache($user, 10*60)
             ->value($field);
     }
 
     public function getFieldValueByUserId($user_id, $field){
         return self::where('user_id', $user_id)
+            ->cache($user_id, 10*60)
             ->value($field);
     }
 

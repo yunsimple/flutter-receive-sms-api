@@ -42,6 +42,7 @@ Route::post('favorites', 'rsapi/Favorites/add');
 Route::post('favorites_del', 'rsapi/Favorites/del');
 Route::any('admob_rewarded_call', 'rsapi/Admob/admobRewardedCall');
 Route::post('buy_number', 'rsapi/Admob/buyNumber');
+Route::post('coins', 'rsapi/Admob/getCoins');
 
 if ($sub_domain == 'rsapi'){
     Route::get('test', 'rsapi/Test/index');

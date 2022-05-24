@@ -55,7 +55,10 @@ class UserController extends BaseController
                 'upcomingTime' => (int)(new PhoneModel())->getUpcomingTime(),
                 'version' => 1.6,
                 'userInfo' => [
-                    'coins' => $firebase_user_model->where('user_id', $user_info['user_id'])->value('coins')
+                    'coins' => $firebase_user_model
+                        ->where('user_id', $user_info['user_id'])
+                        ->cache($user_info['user_id'], 3600)
+                        ->value('coins')
                 ]
             ]
         );
