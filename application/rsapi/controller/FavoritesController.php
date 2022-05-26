@@ -21,16 +21,25 @@ class FavoritesController extends BaseController
         if (!$validate){
             return show('Exception', $phone, 4000);
         }
+        $add = $this->favorites($phone);
+        if ($add){
+            return show('Success');
+        }else{
+            return show('Fail','', 4000);
+        }
+    }
 
+    public function favorites($phone)
+    {
         $user_id = (new FirebaseUserModel())->getUserInfoByAccessToken('', 'user_id');
 
         $favorites_key = Config::get('cache.prefix') . 'favorites:' . $user_id;
         $redis = RedisController::getInstance('master');
         try {
-            $value = $redis->sAdd($favorites_key, $phone);
-            return show('Success', $value);
+            return $redis->sAdd($favorites_key, $phone);
         } catch(\Exception $e){
-            return show('Fail','', 4000);
+            trace($e->getMessage(), 'error');
+            return false;
         }
     }
 

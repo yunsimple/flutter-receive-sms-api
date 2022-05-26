@@ -288,12 +288,12 @@ function gap_times($time, $lang = 'zh', $type = 'later')
 //一个数字，显示成整数舍入模式 51520 显示成50000+
 function numberDim($number){
     if (!$number || $number < 100){
-        return '...';
+        return $number;
     }
     $number = (string)$number;
     $new_number = substr($number, 0, 1);
     $new_number .= str_repeat('0', strlen($number) - 1);
-    return $new_number . '+';
+    return $new_number;
 }
 
 // 密钥key生成算法
@@ -318,5 +318,3 @@ function generateIv($iv = ''){
     }
     return $iv;
 }
-
-// 反向检测

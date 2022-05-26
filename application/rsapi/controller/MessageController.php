@@ -61,7 +61,7 @@ class MessageController extends BaseController
                     'price' => (int) (new PhoneModel())->getPhoneDetail($data['phone_num'], 'price'),
                     'coins' => (int) (new FirebaseUserModel())
                         ->where('user_id', $user_info['user_id'])
-                        ->cache($user_info['user_id'], 3600)
+                        ->cache($user_info['user_id'] . 'coins', 3600)
                         ->value('coins')
                 ]
             ], 3004);

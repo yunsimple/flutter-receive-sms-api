@@ -57,7 +57,7 @@ class UserController extends BaseController
                 'userInfo' => [
                     'coins' => $firebase_user_model
                         ->where('user_id', $user_info['user_id'])
-                        ->cache($user_info['user_id'], 3600)
+                        ->cache($user_info['user_id'] . 'coins', 3600)
                         ->value('coins')
                 ]
             ]

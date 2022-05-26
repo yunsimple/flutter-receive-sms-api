@@ -30,8 +30,8 @@ class PhoneModel extends BaseModel
         return self::with('country')
             ->where('show', '=', 1)
             ->where('online', '=', 1)
-            ->where('type', '<', 3)
-            ->whereIn('warehouse_id', '26,27')
+            //->where('type', '<', 3)
+            //->whereIn('warehouse_id', '26,27')
             ->orderRand()
             ->find();
     }
@@ -43,11 +43,13 @@ class PhoneModel extends BaseModel
         if (empty($country_id)){
             $result = self::with('country')
                 ->where('show', '=', 1)
-                ->where('type', '=', 1)
+                //->where('type', '=', 1)
                 //->where('online', '=', 1)
-                //->order('online', 'desc')
+                ->order('online', 'desc')
+                //->order('type', 'asc')
                 ->order('sort', 'desc')
                 ->order('id', 'desc')
+
                 ->page($page, $limit)
                 ->select();
         }elseif ($country_id == 'upcoming'){
@@ -89,7 +91,7 @@ class PhoneModel extends BaseModel
             $result = self::with('country')
                 ->where('country_id', 'in', $country_id)
                 ->where('show', '=', 1)
-                ->where('type', '=', 1)
+                //->where('type', '=', 1)
                 //->where('online', '=', 1)
                 //->order('online', 'desc')
                 ->order('sort', 'desc')
@@ -100,7 +102,7 @@ class PhoneModel extends BaseModel
         if ($result && !$result->isEmpty()){
             // 取得所有当前支持的语言包，然后在缓存后供筛选
             $app_language = Config::get('config.language');
-            $filed = ['id', 'phone_num', 'total_num', 'show', 'country.id', 'country.bh'];
+            $filed = ['id','type', 'phone_num', 'total_num', 'show', 'country.id', 'country.bh'];
             foreach ($app_language as $value){
                 $filed[] = 'country.' . $value . '_title';
             }

@@ -63,6 +63,7 @@ class PhoneController extends BaseController
                 $phone_data[$key]['country']['bh'] = $bh;
                 $phone_data[$key]['country']['title'] = $title;
 
+                // 最后更新时间
                 $update_time = $redis_sync->zRange('message:'.$value['phone_num'], -1, -1);
                 if (is_array($update_time) && count($update_time) > 0){
                     $update_time = unserialize($update_time[0]);
@@ -70,11 +71,31 @@ class PhoneController extends BaseController
                     $update_time['smsDate'] = (int) time() - 86400;
                 }
                 $phone_data[$key]['last_time'] = (int) $update_time['smsDate'];
+
+                // 短信数量
+
+                if ($value['type'] == '2'){
+                    $phone_data[$key]['receive_total'] = 0;
+                }else{
+                    $phone_data[$key]['receive_total'] = (int) $this->getPhoneReceiveNumber($value['phone_num']);
+                }
+
             }
             return show('Success', $phone_data, 0, $request->header);
         }else{
             return show('Fail', '', 4000, $request->header);
         }
+    }
+
+    //获取每个号码短信接收总数，用于前台显示
+    public function getPhoneReceiveNumber($phone_uid){
+        $redis_sync = RedisController::getInstance('sync');
+        $number = $redis_sync->hGet('phone_receive', $phone_uid);
+        if ($number){
+            return numberDim($number);
+        }
+        return 0;
+
     }
 
     /**
