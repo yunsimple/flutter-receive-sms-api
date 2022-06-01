@@ -121,7 +121,6 @@ class AdmobController extends BaseController
     {
         $firebase_user_model = (new FirebaseUserModel());
         $user_id = $firebase_user_model->getUserInfoByAccessToken('', 'user_id');
-        // todo 上线增加缓存
         $coins = $firebase_user_model->where('user_id', $user_id)->cache($user_id . 'coins', 3600)->value('coins');
         if ($coins){
             return show('Success', ['info' => ['coins' => (int) $coins]]);

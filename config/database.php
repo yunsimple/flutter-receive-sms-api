@@ -60,4 +60,24 @@ return [
     'break_reconnect' => false,
     // 断线标识字符串
     'break_match_str' => [],
+    //历史记录数据存放
+    'db_history' => [
+        'type'            => 'mysql',
+        // 服务器地址
+        'hostname'        => '23.239.2.123',
+        // 数据库名
+        'database'        => 'history',
+        // 用户名
+        'username'        => 'history',
+        // 密码
+        'password'        => 'CZDAH0uf8I75WxyXh6VV',
+        // 端口
+        'hostport'        => 18480,
+        // 连接dsn
+        'dsn'             => '',
+        // 数据库连接参数
+        'params'          => [],
+        // 数据库编码默认采用utf8
+        'charset'         => 'utf8mb4',
+    ]
 ];

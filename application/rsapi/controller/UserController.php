@@ -6,7 +6,8 @@ namespace app\rsapi\controller;
 use app\common\model\FirebaseUserModel;
 use app\common\model\PhoneModel;
 use app\common\model\UserSmsModel;
-use think\Model;
+use think\facade\Config;
+use think\Request;
 use think\Validate;
 
 class UserController extends BaseController
@@ -66,13 +67,28 @@ class UserController extends BaseController
 
     /**
      * 获取顶部公告信息
+     * type [info / danger]
      */
     public function notice(): \think\response\Json
     {
+        $description = [
+            'en' => 'There are prizes for public beta, welcome to submit bugs, suggestions, and have a chance to win surprises.',
+            'zh' => '公测有奖，欢迎提交bug、建议，有机会赢取惊喜。',
+            'pt' => 'Há prêmios para o beta público, bem-vindo ao enviar bugs, sugestões e ter a chance de ganhar surpresas.',
+            'de' => 'Es gibt Preise für die öffentliche Beta, Sie können gerne Fehler und Vorschläge einreichen und haben die Chance, Überraschungen zu gewinnen'
+        ];
+        $headers = getallheaders();
+        $language = 'en';
+        if (array_key_exists('Language', $headers)) {
+            $language_header = $headers['Language'];
+            if (array_key_exists($language_header, $description)){
+                $language = $language_header;
+            }
+        }
         $notice = [
             [
-                'id' => 20220051112356,
-                'description' => 'There are prizes for public beta, welcome to submit bugs, suggestions, and have a chance to win surprises.',
+                'id' => 20220051112351,
+                'description' => $description[$language],
                 'type' => 'info',
                 'isClose' => true
             ],

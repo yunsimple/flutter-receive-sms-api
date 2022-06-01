@@ -34,8 +34,8 @@ class PhoneController extends BaseController
         $phone_page_key = Config::get('cache.prefix') . 'cache:phone:page' . $data['page'] . ':country' . $data['country_id'];
 
         // 读取缓存
-        // todo 上线需要更改缓存
-        $redis_local_phone_value = false;//$redis_local->get($phone_page_key);
+        // 上线需要更改缓存
+        $redis_local_phone_value = $redis_local->get($phone_page_key);
         if ($redis_local_phone_value){
             //从redis取数据
             $phone_data = unserialize($redis_local_phone_value);

@@ -16,7 +16,7 @@ class CountryModel extends BaseModel
             ->order('sort', 'desc')
             ->page($page, $limit)
             // todo 线上需要切换
-            //->cache(3600)
+            ->cache(3600)
             ->select();
         if ($result->isEmpty()){
             return 'null';

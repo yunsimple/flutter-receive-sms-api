@@ -28,6 +28,6 @@ return [
     'not_enough_coins' => 3005, //金币不足
     'no_permission' => 4003, //没有权限
 
-    'language' => ['tw','en'],  //目前api开放的语言
+    'language' => ['tw','en', 'de', 'pt'],  //目前api开放的语言
 
 ];
