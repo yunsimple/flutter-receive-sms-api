@@ -15,19 +15,19 @@ return [
     // 服务器地址
     'hostname'        => env('database_hostname', '127.0.0.1'),
     // 数据库名
-    'database'        => env('database_database', 'bestrs'),
+    'database'        => env('database_database', 'rsapp'),
     // 用户名
-    'username'        => env('database_username', 'bestrs'),
+    'username'        => env('database_username', 'rsapp'),
     // 密码
     'password'        => env('database_password', 'fPAEy7ScLfGzD4S5'),
     // 端口
-    'hostport'        => env('database_hostport', 1777),
+    'hostport'        => env('database_hostport', 18480),
     // 连接dsn
     'dsn'             => '',
     // 数据库连接参数
     'params'          => [],
     // 数据库编码默认采用utf8
-    'charset'         => 'utf8',
+    'charset'         => 'utf8mb4',
     // 数据库表前缀
     'prefix'          => '',
     // 数据库调试模式

@@ -8,7 +8,7 @@ return [
     'master_host' => '127.0.0.1',
     'master_auth' => '',
     'master_db'   => 0,
-    'master_port' => 17481,
+    'master_port' => 17480,
 
     //AES加密信息
     'aes_key' => 0xFF345B9A,

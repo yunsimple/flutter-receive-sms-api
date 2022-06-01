@@ -52,7 +52,7 @@ class Controller
      * 控制器中间件
      * @var array
      */
-    protected array $middleware = [];
+    protected $middleware = [];
 
     /**
      * 构造方法
