@@ -9,6 +9,7 @@ use think\facade\Config;
 use think\Request;
 use think\response\Json;
 use think\Validate;
+use app\common\model\FirebaseUserModel;
 
 class PhoneController extends BaseController
 {
@@ -19,6 +20,7 @@ class PhoneController extends BaseController
      */
     public function getPhone(Request $request): \think\response\Json
     {
+        //1+1
         $language = $request->Language;
         $data['country_id'] = input('post.country_id');
         $data['page'] = input('post.page');
@@ -31,8 +33,12 @@ class PhoneController extends BaseController
             return show($validate->getError(), $validate->getError(), 4000);
         }
         $redis_local = RedisController::getInstance();
-        $phone_page_key = Config::get('cache.prefix') . 'cache:phone:page' . $data['page'] . ':country' . $data['country_id'];
-
+        if ($data['country_id'] == 'favorites'){
+            $user_id = (new FirebaseUserModel())->getUserInfoByAccessToken('', 'user_id');
+            $phone_page_key = Config::get('cache.prefix') . 'cache:phone:favorites:' . $user_id;
+        }else{
+            $phone_page_key = Config::get('cache.prefix') . 'cache:phone:page' . $data['page'] . ':country:' . $data['country_id'];
+        }
         // 读取缓存
         // 上线需要更改缓存
         $redis_local_phone_value = $redis_local->get($phone_page_key);
@@ -81,6 +87,7 @@ class PhoneController extends BaseController
                 }
 
             }
+            //trace('phone返回成功','notice');
             return show('Success', $phone_data, 0, $request->header);
         }else{
             return show('Fail', '', 4000, $request->header);
@@ -143,13 +150,20 @@ class PhoneController extends BaseController
         }
     }
 
+    // 新号码数量，vip号码数量，预告号码数量
     public function getNewPhone(): \think\response\Json
     {
-        $count = (new PhoneModel())->getNewPhone(15);
-        if ($count > 0){
-            return show('Request success', $count);
-        }else{
-            return show('Request success,data is empty',0, 1);
-        }
+        $phone_model = (new PhoneModel());
+        $new_phone_count = $phone_model->getNewPhone(15);
+        $firebase_uid = (new FirebaseUserModel())->getUserInfoByAccessToken('', 'user_id');
+        $refresh_redis_key = Config::get('cache.prefix') . 'favorites:' . $firebase_uid;
+        return show('Request success',
+            [
+                'newPhoneCount' => (int) $new_phone_count,
+                'upcomingPhoneCount' => (int) $phone_model->where('type', 2)->cache('upcoming_phone_count')->count(),
+                'vipPhoneCount' => (int) $phone_model->where('type', 3)->cache('vip_phone_count')->count(),
+                'favoritesPhoneCount' => (int) RedisController::getInstance('sync')->sCard($refresh_redis_key)
+            ]
+        );
     }
 }

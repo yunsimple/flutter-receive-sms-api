@@ -37,7 +37,7 @@ class TokenController extends BaseController
         //token写入redis保存
         $access_token = getRandChar(18);
         $refresh_token = getRandChar(18);
-        $redis = RedisController::getInstance();
+        $redis_master = RedisController::getInstance('master');
         $access_token_key = Config::get('cache.prefix') . 'accessToken:' . $access_token;
         $refresh_token_key = Config::get('cache.prefix') . 'refreshToken:' . $refresh_token;
 
@@ -54,8 +54,8 @@ class TokenController extends BaseController
         $refresh_token_data['user_id'] = $firebase_user['user_id'];
 
 
-        $access = RedisController::hMsetEx($access_token_key, $access_data, Config::get('config.access_token_expires'));
-        $refresh = RedisController::hMsetEx($refresh_token_key, $refresh_token_data, Config::get('config.refresh_token_expires'));
+        $access = RedisController::hMsetEx($redis_master, $access_token_key, $access_data, Config::get('config.access_token_expires'));
+        $refresh = RedisController::hMsetEx($redis_master, $refresh_token_key, $refresh_token_data, Config::get('config.refresh_token_expires'));
         if ($refresh && $access) {
             //清除之前的token
             // todo 有必须删除之前的refresh token,是否需要删除，如果删除，被人大批量使用，那岂不是发现不了
@@ -64,14 +64,15 @@ class TokenController extends BaseController
             $access_token = openssl_encrypt($access_token, Config::get('config.aes_mode'), generateKey(), 0, generateIv());
             $refresh_token = openssl_encrypt($refresh_token, Config::get('config.aes_mode'), generateKey(), 0, generateIv());
             if ($access_token && $refresh_token){
+                //trace('正确返回access refresh token', 'notice');
                 return show('Success',
                     ['access_token' => $access_token,
                         'refresh_token' => $refresh_token,
-                        'access_token_expire'=> $redis->ttl($access_token_key),
-                        'refresh_token_expire'=> $redis->ttl($refresh_token_key)
+                        'access_token_expire'=> $redis_master->ttl($access_token_key),
+                        'refresh_token_expire'=> $redis_master->ttl($refresh_token_key)
                     ],
                     0,
-                    ['Expires'=>$redis->ttl($access_token_key)]);
+                    ['Expires'=>$redis_master->ttl($access_token_key)]);
             }
             //return show('登陆成功', ['access_token' => $access_token, 'refresh_token' => $refresh_token], 0, ['Expires'=>60]);
         }
@@ -97,7 +98,7 @@ class TokenController extends BaseController
         $ivs = Config::get('config.aes_iv');
         $num = 0;
         foreach ($ivs as $iv){
-            //trace('密钥' . $iv, 'notice');
+            trace('密钥' . $iv, 'notice');
             $refresh_token = $this->checkRefreshToken($refresh_token_code, generateKey(), generateIv($iv));
             if($refresh_token){
                 $num++;
@@ -109,7 +110,7 @@ class TokenController extends BaseController
             return show('Exception', '', 4004);
         }
 
-        $redis = RedisController::getInstance();
+        $redis_master = RedisController::getInstance('master');
         $refresh_token_key = Config::get('cache.prefix') . 'refreshToken:' . $refresh_token;
         // todo 还可以进一步检查，hash里面其他参数，对安全性做健全处理
         // 签发accessToken
@@ -121,17 +122,18 @@ class TokenController extends BaseController
         ];
         $access_token = getRandChar(18);
 
-        $access = RedisController::hMsetEx($cache_prefix . 'accessToken:' . $access_token, $access_token_data, Config::get('config.access_token_expires'));
+        $access = RedisController::hMsetEx($redis_master, $cache_prefix . 'accessToken:' . $access_token, $access_token_data, Config::get('config.access_token_expires'));
 
         if ($access) {
-            $redis->hIncrBy($refresh_token_key, 'refreshNumber', 1);
+            $redis_master->hIncrBy($refresh_token_key, 'refreshNumber', 1);
             //验证refreshToken过期时间，如果过期，重新登陆。如果未过期，延期使用
-            $refresh_ttl = $redis->ttl($refresh_token_key);
+            $refresh_ttl = $redis_master->ttl($refresh_token_key);
             if ($refresh_ttl < 86400 * 7) {
-                $redis->expire($refresh_token_key, Config::get('config.refresh_token_expires'));
+                $redis_master->expire($refresh_token_key, Config::get('config.refresh_token_expires'));
             }
-
-            return show('Success', ['accessToken' => $access_token, 'accessTokenExpire' => $redis->ttl($cache_prefix . 'accessToken:' . $access_token)]);
+            //trace('正确返回accessToken', 'notice');
+            //trace(['accessToken' => $access_token, 'accessTokenExpire' => $redis_master->ttl($cache_prefix . 'accessToken:' . $access_token)], 'notice');
+            return show('Success', ['accessToken' => $access_token, 'accessTokenExpire' => $redis_master->ttl($cache_prefix . 'accessToken:' . $access_token)]);
             //return show('签发成功', $access_token, 0, ['Expires'=>60]);
         } else {
             return show('Fail', '', 4000);
@@ -145,8 +147,8 @@ class TokenController extends BaseController
         $aes_mode = Config::get('config.aes_mode');
         $decode_token = openssl_decrypt($refresh_token_code, $aes_mode, $salt, 0, $iv);
         $refresh_token_key = Config::get('cache.prefix') . 'refreshToken:' . $decode_token;
-        $redis = RedisController::getInstance();
-        if (!$redis->exists($refresh_token_key)) {
+        $redis_sync = RedisController::getInstance('sync');
+        if (!$redis_sync->exists($refresh_token_key)) {
             return false;
         }
         return $decode_token;

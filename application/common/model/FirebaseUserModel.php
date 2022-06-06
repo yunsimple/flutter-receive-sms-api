@@ -44,7 +44,7 @@ class FirebaseUserModel extends BaseModel
             $access_token = getallheaders()['Access-Token'];
         }
         $access_token_key = Config::get('cache.prefix') . 'accessToken:' . $access_token;
-        $redis_sync = RedisController::getInstance();
+        $redis_sync = RedisController::getInstance('sync');
         $refresh_token = $redis_sync->hGet($access_token_key, 'refreshToken');
         $refresh_token_key = Config::get('cache.prefix') . 'refreshToken:' . $refresh_token;
         if ($search == 'all'){
@@ -59,7 +59,7 @@ class FirebaseUserModel extends BaseModel
             $access_token = getallheaders()['Access-Token'];
         }
         $access_token_key = Config::get('cache.prefix') . 'accessToken:' . $access_token;
-        $redis_sync = RedisController::getInstance();
+        $redis_sync = RedisController::getInstance('sync');
         return $redis_sync->hGet($access_token_key, 'refreshToken');
     }
 

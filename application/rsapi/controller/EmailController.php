@@ -16,7 +16,7 @@ class EmailController extends BaseController
     
     //获取当前生效的邮箱后坠
     public function getEmailSite(Request $request){
-        return show('success', ['1655mail.com', 'mailscode.com', 'bestemail.online'], 0, $request->header);
+        return show('success', ['1655mail.com', 'iperfectmail.com'], 0, $request->header);
     }
     
     //获取emal

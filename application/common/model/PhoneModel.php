@@ -49,7 +49,6 @@ class PhoneModel extends BaseModel
                 //->order('type', 'asc')
                 ->order('sort', 'desc')
                 ->order('id', 'desc')
-
                 ->page($page, $limit)
                 ->select();
         }elseif ($country_id == 'upcoming'){
@@ -66,7 +65,7 @@ class PhoneModel extends BaseModel
             // 获取该用户收藏的号码
             $user_info = (new FirebaseUserModel())->getUserInfoByAccessToken('', 'user_id');
             $favorites_set_key = Config::get('cache.prefix') . 'favorites:' . $user_info;
-            $redis_sync = RedisController::getInstance('master');
+            $redis_sync = RedisController::getInstance('sync');
             $phones = $redis_sync->sMembers($favorites_set_key);
             $result = self::with('country')
                 ->where('show', '=', 1)
@@ -128,7 +127,7 @@ class PhoneModel extends BaseModel
                 ->where('show', '=', 1)
                 ->find();
             if ($result && !$result->isEmpty()){
-                $result = $result->visible(['id','online','price', 'phone_num','type', 'total_num', 'show', 'country.id', 'country.en_title', 'country.title', 'country.bh', 'warehouse.title'])->toArray();
+                $result = $result->visible(['id','uid', 'online','price', 'phone_num','type', 'total_num', 'show', 'country.id', 'country.en_title', 'country.title', 'country.bh', 'warehouse.title'])->toArray();
                 RedisController::getInstance('master')->set($phone_detail_key, serialize($result));
                 if ($field){
                     return $result[$field];

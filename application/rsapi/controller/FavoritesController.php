@@ -34,9 +34,12 @@ class FavoritesController extends BaseController
         $user_id = (new FirebaseUserModel())->getUserInfoByAccessToken('', 'user_id');
 
         $favorites_key = Config::get('cache.prefix') . 'favorites:' . $user_id;
-        $redis = RedisController::getInstance('master');
+        $redis_master = RedisController::getInstance('master');
         try {
-            return $redis->sAdd($favorites_key, $phone);
+            //删除缓存
+            $favorites_cache_key = Config::get('cache.prefix') . 'cache:phone:favorites:' . $user_id;
+            RedisController::getInstance()->del($favorites_cache_key);
+            return $redis_master->sAdd($favorites_key, $phone);
         } catch(\Exception $e){
             trace($e->getMessage(), 'error');
             return false;
@@ -54,9 +57,12 @@ class FavoritesController extends BaseController
         $user_id = (new FirebaseUserModel())->getUserInfoByAccessToken('', 'user_id');
 
         $favorites_key = Config::get('cache.prefix') . 'favorites:' . $user_id;
-        $redis = RedisController::getInstance('master');
+        $redis_master = RedisController::getInstance('master');
         try {
-            $redis->sRem($favorites_key, $phone);
+            $redis_master->sRem($favorites_key, $phone);
+            //删除缓存
+            $favorites_cache_key = Config::get('cache.prefix') . 'cache:phone:favorites:' . $user_id;
+            RedisController::getInstance()->del($favorites_cache_key);
             return show('Success');
         } catch(\Exception $e){
             return show('Fail','', 4000);

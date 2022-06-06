@@ -138,10 +138,10 @@ class RedisController
         return false;
     }
 
-    public static function hMsetEx($key, $value, $expire){
+    public static function hMsetEx($redis, $key, $value, $expire){
         if (!is_array($value))
             return 2;
-        self::$redis->hMset($key, $value);
-        return self::$redis->expire($key, $expire);
+        $redis->hMset($key, $value);
+        return $redis->expire($key, $expire);
     }
 }

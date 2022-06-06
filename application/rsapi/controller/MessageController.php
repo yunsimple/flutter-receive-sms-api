@@ -77,6 +77,7 @@ class MessageController extends BaseController
             $redis = RedisController::getInstance('sync');
             $message_data = RedisController::zSetLatestMsg($redis, 'message:' . $data['phone_num']);
             if ($message_data) {
+                //trace('正确返回message', 'notice');
                 if ($message_data == 'null'){
                     return show('No data',['info' =>
                         [
@@ -98,7 +99,7 @@ class MessageController extends BaseController
             }
         }else{
             //历史记录
-            $phone_id = $phone_model->getPhoneDetail($data['phone_num'], 'id');
+            $phone_id = $phone_model->getPhoneDetail($data['phone_num'], 'uid');
             try {
                 $result = Db::connect('db_history')
                     ->table('collection_msg')

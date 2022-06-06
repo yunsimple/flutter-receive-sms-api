@@ -5,8 +5,8 @@ return [
     'sync_auth' => '',
     'sync_db'   => 0,
     'sync_port' => 17480,
-    'master_host' => '127.0.0.1',
-    'master_auth' => '',
+    'master_host' => '23.239.2.123',
+    'master_auth' => 'PjKnXgXGTyp85Synh9wq',
     'master_db'   => 0,
     'master_port' => 17480,
 

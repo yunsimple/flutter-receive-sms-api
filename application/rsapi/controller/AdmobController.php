@@ -35,7 +35,7 @@ class AdmobController extends BaseController
          * 'key_id' => '3335741209',
          */
         $call_info = Request::param('');
-        //trace($call_info, 'notice');
+        trace($call_info, 'notice');
         $mysql_data = [
             'user_id' => $call_info['user_id'],
             'coins' => $call_info['reward_amount'],
