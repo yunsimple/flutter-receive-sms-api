@@ -104,6 +104,7 @@ class MessageController extends BaseController
                 $result = Db::connect('db_history')
                     ->table('collection_msg')
                     ->where('phone_id', $phone_id)
+                    ->order('id','desc')
                     ->cache($phone_id . '_' . $data['page'], 86400)
                     ->page($data['page'], 20)
                     ->select();

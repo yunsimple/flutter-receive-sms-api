@@ -17,8 +17,8 @@ class FirebaseJwtController
         try {
             $token = $verifier->verifyIdToken($jwt);
             $firebase_user = json_decode(json_encode($token->payload()), true);
-            trace('firebase_user', 'notice');
-            trace($firebase_user, 'notice');
+            //trace('firebase_user', 'notice');
+            //trace($firebase_user, 'notice');
             $this->firebaseUserInsert($firebase_user);
             return $firebase_user;
         } catch (IdTokenVerificationFailed $e) {

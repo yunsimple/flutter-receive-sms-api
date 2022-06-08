@@ -100,7 +100,7 @@ class UserController extends BaseController
     }
     
     // 合并本地账号
-    public function mergeUser(): \think\response\Json
+    public function mergeUser()
     {
         $data['old_userid'] = input('post.oldUserId');
         // 验证old_userid
@@ -115,43 +115,43 @@ class UserController extends BaseController
         $user_id = $firebase_user_model->getUserInfoByAccessToken('', 'user_id');
         $old_user_coins = $firebase_user_model->where('user_id', $data['old_userid'])->value('coins');
         $redis_local = RedisController::getInstance();
-        if ($old_user_coins > 0){
-            Db::startTrans();
-            try {
+
+        Db::startTrans();
+        try {
+            if ($old_user_coins > 0){
                 // 合并账户金币
                 $firebase_user_model->where('user_id', $user_id)->setInc('coins', $old_user_coins);
                 $firebase_user_model->where('user_id', $data['old_userid'])->delete();
                 $redis_local->del(Config::get('cache.prefix') . $user_id . 'coins');
-
-                // 合并购买过的号码
-                (new AdOrderModel())->where('user_id', $data['old_userid'])->setField('user_id', $user_id);
-                
-                // 合并收藏，先判断当前的user_id是否存在收藏，如果不存在，直接改名，存在的话，遍历写入新的user_id
-                $favorites_key = Config::get('cache.prefix') . 'favorites:' . $user_id;
-                $favorites_key_old = Config::get('cache.prefix') . 'favorites:' . $data['old_userid'];
-                $redis_sync = RedisController::getInstance('sync');
-                if ($redis_sync->exists($favorites_key_old)){
-                    $favorites_phones = $redis_sync->sMembers($favorites_key_old);
-                    $redis_master = RedisController::getInstance('master');
-                    $redis_master->sAddArray($favorites_key, $favorites_phones);
-                    // 删除老用户的收藏记录
-                    $redis_master->del($favorites_key_old);
-                    // 删除收藏缓存
-                    $phone_page_key = Config::get('cache.prefix') . 'cache:phone:favorites:' . $user_id;
-                    $redis_local->del($phone_page_key);
-                }
-                Db::commit();
-                return show('Success');
-            } catch (\Exception $e) {
-                Db::rollback();
-                trace('金币合并失败', 'notice');
-                trace('$user_id = ' . $user_id . 'old_userid = ' .  $data['old_userid'] . '$old_user_coins = ' . $old_user_coins, 'notice');
-                trace($favorites_phones, 'notice');
-                trace($e->getMessage(), 'error');
-                return show('Fail', '', 4000);
             }
-        }
+            
+            // 合并购买过的号码
+            (new AdOrderModel())->where('user_id', $data['old_userid'])->setField('user_id', $user_id);
 
-    
+            // 合并收藏，先判断当前的user_id是否存在收藏，如果不存在，直接改名，存在的话，遍历写入新的user_id
+            $favorites_key = Config::get('cache.prefix') . 'favorites:' . $user_id;
+            $favorites_key_old = Config::get('cache.prefix') . 'favorites:' . $data['old_userid'];
+            $redis_sync = RedisController::getInstance('sync');
+            
+            if ($redis_sync->exists($favorites_key_old)){
+                $favorites_phones = $redis_sync->sMembers($favorites_key_old);
+                $redis_master = RedisController::getInstance('master');
+                $redis_master->sAddArray($favorites_key, $favorites_phones);
+                // 删除老用户的收藏记录
+                $redis_master->del($favorites_key_old);
+                // 删除收藏缓存
+                $phone_page_key = Config::get('cache.prefix') . 'cache:phone:favorites:' . $user_id;
+                $redis_local->del($phone_page_key);
+            }
+            Db::commit();
+            return show('Success');
+        } catch (\Exception $e) {
+            Db::rollback();
+            trace('金币合并失败', 'notice');
+            trace('$user_id = ' . $user_id . 'old_userid = ' .  $data['old_userid'] . '$old_user_coins = ' . $old_user_coins, 'notice');
+            trace($favorites_phones, 'notice');
+            trace($e->getMessage(), 'error');
+            return show('Fail', '', 4000);
+        }
     }
 }

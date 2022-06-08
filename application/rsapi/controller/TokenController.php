@@ -19,7 +19,7 @@ class TokenController extends BaseController
      * 签发accessToken和refreshToken /login
      * @return Json
      */
-    public function getToken(): Json
+    public function getToken()
     {
         $salt = generateKey();
         $iv = generateIv();
@@ -83,7 +83,7 @@ class TokenController extends BaseController
      * 根据refreshToken获取accessToken
      * @return Json
      */
-    public function getAccessByRefresh(): Json
+    public function getAccessByRefresh()
     {
         $cache_prefix = Config::get('cache.prefix');
         $refresh_token_code = input('post.token');
@@ -93,7 +93,6 @@ class TokenController extends BaseController
         if (!$validate->check(['refresh_token' => $refresh_token_code])) {
             return show((string)$validate->getError(), $validate->getError(), 4000);
         }
-
         //refresh_token 解密
         $ivs = Config::get('config.aes_iv');
         $num = 0;
@@ -102,7 +101,7 @@ class TokenController extends BaseController
             $refresh_token = $this->checkRefreshToken($refresh_token_code, generateKey(), generateIv($iv));
             if($refresh_token){
                 $num++;
-                //break;
+                break;
             }
         }
         if ($num == 0){
