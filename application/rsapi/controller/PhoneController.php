@@ -14,11 +14,14 @@ use app\common\model\FirebaseUserModel;
 class PhoneController extends BaseController
 {
     protected $middleware = ['AuthApp'];
+/*    protected $middleware = [
+        'AuthApp' => ['except' => ['getNewPhone']],
+    ];*/
     protected $header = []; //自定义response返回header
     /**
      * 根据国家获取号码列表
      */
-    public function getPhone(Request $request): \think\response\Json
+    public function getPhone(Request $request)
     {
         //1+1
         $language = $request->Language;
@@ -108,7 +111,7 @@ class PhoneController extends BaseController
     /**
      * 获取随机显示号码
      */
-    public function getPhoneRandom(Request $request): Json
+    public function getPhoneRandom(Request $request)
     {
         $phone_model = new PhoneModel();
         $phone_num_info = $phone_model->getRandom();
@@ -121,7 +124,7 @@ class PhoneController extends BaseController
         }
     }
 
-    public function report(Request $request): Json
+    public function report(Request $request)
     {
         $phone_num = input('post.phone');
         $validate = Validate::make(['phone_num|phone'=>'must|number|max:15|min:6']);
@@ -151,7 +154,7 @@ class PhoneController extends BaseController
     }
 
     // 新号码数量，vip号码数量，预告号码数量
-    public function getNewPhone(): \think\response\Json
+    public function getNewPhone()
     {
         $phone_model = (new PhoneModel());
         $new_phone_count = $phone_model->getNewPhone(15);
@@ -160,8 +163,8 @@ class PhoneController extends BaseController
         return show('Request success',
             [
                 'newPhoneCount' => (int) $new_phone_count,
-                'upcomingPhoneCount' => (int) $phone_model->where('type', 2)->cache('upcoming_phone_count')->count(),
-                'vipPhoneCount' => (int) $phone_model->where('type', 3)->cache('vip_phone_count')->count(),
+                'upcomingPhoneCount' => (int) $phone_model->getUpcomingNumber(),
+                'vipPhoneCount' => (int) $phone_model->where('type', 3)->cache('vip_phone_count', 3600)->count(),
                 'favoritesPhoneCount' => (int) RedisController::getInstance('sync')->sCard($refresh_redis_key)
             ]
         );

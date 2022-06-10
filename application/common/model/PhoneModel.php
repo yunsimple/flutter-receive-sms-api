@@ -144,7 +144,7 @@ class PhoneModel extends BaseModel
         return self::where('online', 1)
             ->where('show', 1)
             ->where('type', 2)
-            ->cache('upcoming_number',1800)
+            ->cache('upcoming_phone_coun',3600)
             ->count();
     }
 
@@ -155,7 +155,7 @@ class PhoneModel extends BaseModel
             ->where('show', 1)
             //->where('type', 2)
             ->whereTime('create_time', 'between', [$time-($day*86400),$time])
-            ->cache('upcoming_number',1800)
+            ->cache('upcoming_number_count',3600)
             ->count();
     }
 
