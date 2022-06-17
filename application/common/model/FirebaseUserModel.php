@@ -3,9 +3,34 @@ namespace app\common\model;
 
 use app\common\controller\RedisController;
 use think\facade\Config;
+use think\Model;
+use think\Db;
+use app\common\model\AdOrderModel;
 
 class FirebaseUserModel extends BaseModel
 {
+    
+    // 删除用户信息 firebaseUser AdOrder 收藏信息
+    public function delete(){
+        Db::startTrans();
+        try {
+            $user_id = $this->getUserInfoByAccessToken('', 'user_id');
+            self::where('user_id', $user_id)->delete();
+            (new AdOrderModel())->where('user_id', $user_id)->delete();
+            //删除redis收藏信息
+            $redis_favorites_key = Config::get('cache.prefix') . 'favorites:' . $user_id;
+            RedisController::getInstance('master')->del($redis_favorites_key);
+            Db::commit();
+            return true;
+        } catch (\Exception $e) {
+            Db::rollback();
+            trace('删除用户失败', 'error');
+            trace($call_info, 'error');
+            trace($e->getMessage(), 'error');
+            return false;
+        }
+    }
+    
     //登陆查询用户登陆信息
     public function getUserInfo($user): FirebaseUserModel
     {

@@ -44,6 +44,7 @@ Route::any('admob_rewarded_call', 'rsapi/Admob/admobRewardedCall');
 Route::post('buy_number', 'rsapi/Admob/buyNumber');
 Route::post('coins', 'rsapi/Admob/getCoins');
 Route::post('merge', 'rsapi/User/mergeUser');
+Route::post('delete_user', 'rsapi/User/deleteUser');
 
 if ($sub_domain == 'rsapi'){
     Route::get('test', 'rsapi/Test/index');

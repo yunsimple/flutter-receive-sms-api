@@ -86,6 +86,7 @@ class MessageController extends BaseController
                         ]
                     ], 3000);
                 }
+                
                 return show('Success',
                     [
                         'message'=>$message_data,

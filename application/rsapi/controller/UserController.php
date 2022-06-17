@@ -16,7 +16,7 @@ use app\common\model\AdOrderModel;
 class UserController extends BaseController
 {
     protected $middleware = [
-        'AuthApp' => ['only' => ['getMy', 'mergeUser']],
+        'AuthApp' => ['except' => ['notice']],
     ];
 
     public function register()
@@ -73,7 +73,7 @@ class UserController extends BaseController
      */
     public function notice(): \think\response\Json
     {
-        //return show('success');
+        return show('success');
         $description = [
             'en' => 'There are prizes for public beta, welcome to submit bugs, suggestions, and have a chance to win surprises.',
             'zh' => '公测有奖，欢迎提交bug、建议，有机会赢取惊喜。',
@@ -90,7 +90,7 @@ class UserController extends BaseController
         }
         $notice = [
             [
-                'id' => 20220051112351,
+                'id' => 202200511123511,
                 'description' => $description[$language],
                 'type' => 'info',
                 'isClose' => true
@@ -151,6 +151,15 @@ class UserController extends BaseController
             trace('$user_id = ' . $user_id . 'old_userid = ' .  $data['old_userid'] . '$old_user_coins = ' . $old_user_coins, 'notice');
             trace($favorites_phones, 'notice');
             trace($e->getMessage(), 'error');
+            return show('Fail', '', 4000);
+        }
+    }
+    
+    public function deleteUser(){
+        $result = (new FirebaseUserModel)->delete();
+        if($result){
+            return show('Success');
+        }else{
             return show('Fail', '', 4000);
         }
     }
