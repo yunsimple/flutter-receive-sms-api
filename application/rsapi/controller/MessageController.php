@@ -74,6 +74,8 @@ class MessageController extends BaseController
 
         // 获取短信
         if ($data['page'] == 1){
+            // 请求爬虫数据
+            $this->spiderQueue($phone_detail);
             $redis = RedisController::getInstance('sync');
             $message_data = RedisController::zSetLatestMsg($redis, 'message:' . $data['phone_num']);
             if ($message_data) {
@@ -118,7 +120,60 @@ class MessageController extends BaseController
 
     }
 
-    protected function getHistory(){
-
+        /**
+     * 提交蜘蛛队列请求
+    */
+    protected function spiderQueue($phone_info){
+        //trace($phone_info, 'notice');
+        $key_phone_click = 'click:' . $phone_info['phone_num'];
+        //频率限制
+        //每个号码10秒钟只能请求一次
+        $redis_local = RedisController::getInstance();
+        if ($redis_local->exists($key_phone_click)){
+            return false;
+        }
+        //如果号码离线，不提交
+        if($phone_info['online'] == 0 || $phone_info['show'] == 0){
+            return false;
+        }
+        //如果是爬虫，也不提交请求
+        if ($redis_local->sIsMember('spider', real_ip())){
+            return false;
+        }
+        //如果voice号，也不需要提交
+        $warehouse = $phone_info['warehouse']['title'];
+        if ($warehouse !== 'Storytrain' && $warehouse !== 'Receivesms'){
+            return false;
+        }
+        
+        if ($warehouse == 'Storytrain'){
+            $mode = 'yi';
+        }else{
+            $mode = 'guzzle';
+        }
+        $params = [
+            'from' => 'https://app20161108.iyunzhi.top/msg_queue/',
+            'phone_num' => $phone_info['phone_num'],
+            'phone_id' => array_key_exists('phone_id', $phone_info) ? $phone_info['phone_id'] : '',
+            'bh' => $phone_info['country']['bh'],
+            'site' => $phone_info['warehouse']['title'],
+            'mode' => $mode
+        ];
+        
+        $redis_local->lpush('spider_sync_queue', json_encode($params));
+        $redis_local->setex($key_phone_click, 20, 1);
+        /*$url = $redis->redisCheck(Config::get('cache.prefix') . 'curl_url');
+        if ($url){
+            try {
+                asyncRequestFS($url, 'POST', $params);
+                $redis->setex($key_phone_click, 30, 1);
+            }catch (\Exception $e){
+                trace($e->getMessage(), 'error');
+                trace('远程请求地址请求出错', 'notice');
+                curl_get("http://notice.bilulanlv.com/?key=qywsxxl&title=Crawler-connection-failed");
+            }
+        }else{
+            trace('远程请求地址不存在', 'notice');
+        }*/
     }
 }

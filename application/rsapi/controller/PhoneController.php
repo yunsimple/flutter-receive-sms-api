@@ -63,8 +63,16 @@ class PhoneController extends BaseController
             }
             $redis_sync = RedisController::getInstance('sync');
             foreach ($phone_data as $key => $value) {
+                //trace($value, 'notice');
                 // 更改获取到的语言字段 en_title 改成title
-                $title = $value['country'][$language . '_title'];
+                try{
+                    $title = $value['country'][$language . '_title'];
+                }catch (\Exception $e){
+                    $title = $value['country']['en_title'];
+                    trace('app获取对应语言错误', 'notice');
+                    trace(json($e->getMessage()), 'error');
+                }
+                
                 $id = $value['country']['id'];
                 $bh = $value['country']['bh'];
                 unset($phone_data[$key]['country']);
@@ -132,8 +140,8 @@ class PhoneController extends BaseController
             return show($validate->getError(), $validate->getError(), 4000);
         }
         //把提交的号码保存进入redis. report:1814266666
-        $redis = RedisController::getInstance();
-        $return = RedisController::stringIncrbyEx($redis, Config::get('cache.prefix') . 'report:' . $phone_num, 86400);
+        $redis = RedisController::getInstance('master');
+        $return = RedisController::stringIncrbyEx($redis, 'report:' . $phone_num, 172800);
         if (!$return){
             return show('Fail', '', 4000, $request->header);
         }

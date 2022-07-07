@@ -117,12 +117,12 @@ class RedisController
         $result = $redis->zRevRange($key, 0, $num);
         $data = [];
         foreach ($result as $key => $value){
-            $data[$key] = unserialize($value);
+            $data[$key] = mb_convert_encoding(unserialize($value), 'UTF-8', 'UTF-8');
             $data[$key]['smsDate'] = (int)$data[$key]['smsDate'];
             // todo url不能为空，可以为空值，兼容处理，app 1.8.09版本以上可以去掉
-            if(!array_key_exists('url', $data[$key])){
+            /*if(!array_key_exists('url', $data[$key])){
                 $data[$key]['url'] = '';
-            }
+            }*/
         }
         if (count($data) > 0){
             return $data;

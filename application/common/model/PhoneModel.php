@@ -44,7 +44,7 @@ class PhoneModel extends BaseModel
             $result = self::with('country')
                 ->where('show', '=', 1)
                 //->where('type', '=', 1)
-                //->where('online', '=', 1)
+                ->where('display', '=', 1)
                 ->order('online', 'desc')
                 //->order('type', 'asc')
                 ->order('sort', 'desc')
@@ -91,7 +91,7 @@ class PhoneModel extends BaseModel
                 ->where('country_id', 'in', $country_id)
                 ->where('show', '=', 1)
                 //->where('type', '=', 1)
-                //->where('online', '=', 1)
+                //->where('display', '=', 1)
                 //->order('online', 'desc')
                 ->order('sort', 'desc')
                 ->order('id', 'desc')
@@ -127,7 +127,7 @@ class PhoneModel extends BaseModel
                 ->where('show', '=', 1)
                 ->find();
             if ($result && !$result->isEmpty()){
-                $result = $result->visible(['id','uid', 'online','price', 'phone_num','type', 'total_num', 'show', 'country.id', 'country.en_title', 'country.title', 'country.bh', 'warehouse.title'])->toArray();
+                $result = $result->visible(['id','uid', 'online','price', 'phone_num','type', 'total_num', 'phone_id', 'show', 'country.id', 'country.en_title', 'country.title', 'country.bh', 'warehouse.title'])->toArray();
                 RedisController::getInstance('master')->set($phone_detail_key, serialize($result));
                 if ($field){
                     return $result[$field];

@@ -73,10 +73,17 @@ class AdmobController extends BaseController
         if (!$validate->check($data)) {
             return show('Fail', $validate->getError(), 4000);
         }
-
-        // 查看该用户Coins是否足够支付
+        
         $firebase_user_model = new FirebaseUserModel();
         $user_id = $firebase_user_model->getUserInfoByAccessToken('', 'user_id');
+        $ad_order_model = new AdOrderModel();
+        // 检查是否已经支付，防止重复支付
+        $is_buy = $ad_order_model->where('user_id', $user_id)->where('phone_num', $data['phone_num'])->find();
+        //trace($is_buy, 'notice');
+        if($is_buy){
+            return show('repeat purchase', '', 3006);
+        }
+        // 查看该用户Coins是否足够支付
         $coins = (int) $firebase_user_model->where('user_id', $user_id)->cache($user_id . 'coins', 3600)->value('coins');
         $price = (int) (new PhoneModel())->getPhoneDetail($data['phone_num'], 'price');
         if (!$coins || !$price || $coins < $price){
@@ -98,7 +105,7 @@ class AdmobController extends BaseController
                 'update_time' => time(),
                 'type' => 2,
             ];
-            $result = (new AdOrderModel())->cache(3600)->insert($buy_data_order);
+            $result = $ad_order_model->cache(3600)->insert($buy_data_order);
             if ($result == 1){
                 Db::commit();
                 // 购买号码自动收藏

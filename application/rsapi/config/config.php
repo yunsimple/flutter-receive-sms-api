@@ -27,6 +27,8 @@ return [
     'upcoming_number' => 3003, // type = 2 预告号码
     'vip_number' => 3004, //type = 3 vip号码
     'not_enough_coins' => 3005, //金币不足
+    'repeat_buy' => 3006, // 重复购买
+    
     'no_permission' => 4003, //没有权限
 
     'language' => ['tw','en', 'de', 'pt'],  //目前api开放的语言
