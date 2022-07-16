@@ -45,12 +45,27 @@ class ActivityController extends BaseController
             $data['version'] = getHeader('Version');
             $data['create_time'] = $time;
             $data['update_time'] = $time;
-            $insert = $activity_model->insert($data);
-            if($insert){
-                return show('Sign in success today', ['coins' => $coins, 'nextRewarded' => $next_rewarded,  'list' => $this->signInList($user_id)]);
-            }else{
+            Db::startTrans();
+            try {
+                $insert = $activity_model->insert($data);
+                if($insert){
+                    // 增加余额
+                    $money = (new FirebaseUserModel())->save(['coins'  => ['inc', $coins]],['user_id' => $user_id]);
+                    if($money){
+                        // 清理缓存
+                        $redis_local = RedisController::getInstance();
+                        $redis_local->del(Config::get('cache.prefix') . $user_id . 'coins');
+                        Db::commit();
+                        return show('Sign in success today', ['coins' => $coins, 'nextRewarded' => $next_rewarded,  'list' => $this->signInList($user_id)]);
+                    }
+                }
+                return show('Sign in fail today', '', 4000);
+            } catch (\Exception $e){
+                Db::rollback();
                 return show('Sign in fail today', '', 4000);
             }
+            
+            
         }
     }
     
