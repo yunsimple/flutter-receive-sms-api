@@ -9,21 +9,14 @@ use app\common\model\PhoneModel;
 use app\common\model\UserModel;
 use think\Db;
 use think\facade\Request;
+use think\facade\Config;
 
 class TestController
 {
     public function index(){
-        $phone_model = new PhoneModel();
-        $phone_num = 9092337178;
-        $page = 1;
-        $phone_id = 9354182739;//$phone_model->getPhoneDetail($phone_num, 'id');
-        dump($phone_id);
-        $result = Db::connect('db_history')
-            ->table('collection_msg')
-            ->where('phone_id', '=', $phone_id)
-            //->cache($phone_id . '_' . $page, 86400)
-            ->page($page, 20)
-            ->select();
+        $phone_model = (new PhoneModel());
+        $result = $phone_model->where([['type', '=', 3], ['display', '=', 1], ['show', '=', 1]])->count();
         dump($result);
     }
+    
 }

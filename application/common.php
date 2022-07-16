@@ -318,3 +318,17 @@ function generateIv($iv = ''){
     }
     return $iv;
 }
+
+// 获取header信息
+function getHeader($value){
+    $headers = getallheaders();
+    if (!array_key_exists($value, $headers)) {
+        return false;
+    }
+    return $headers[$value];
+}
+
+// 计算当天剩余秒数，用作redis缓存当天过期时间
+function getTodayEndTimestamp(){
+    return strtotime(date('Y-m-d' . ' 23:59:59')) - time();
+}

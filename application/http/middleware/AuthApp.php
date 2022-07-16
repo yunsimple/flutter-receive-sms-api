@@ -15,6 +15,7 @@ class AuthApp extends Controller
         $salt = generateKey();
         $headers = getallheaders();
         //trace($headers, 'notice');
+        //trace(Request::param(), 'notice');
         // Access_Token检查，过滤/login接口
         if (Request::url() !== '/login' && Request::url() !== '/access'){
             if (!array_key_exists('Access-Token', $headers)) {

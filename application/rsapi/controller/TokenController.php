@@ -64,7 +64,7 @@ class TokenController extends BaseController
             $access_token = openssl_encrypt($access_token, Config::get('config.aes_mode'), generateKey(), 0, generateIv());
             $refresh_token = openssl_encrypt($refresh_token, Config::get('config.aes_mode'), generateKey(), 0, generateIv());
             if ($access_token && $refresh_token){
-                //trace('正确返回access refresh token', 'notice');
+                // trace('正确返回access refresh token', 'notice');
                 return show('Success',
                     ['access_token' => $access_token,
                         'refresh_token' => $refresh_token,
@@ -97,7 +97,7 @@ class TokenController extends BaseController
         $ivs = Config::get('config.aes_iv');
         $num = 0;
         foreach ($ivs as $iv){
-            trace('密钥' . $iv, 'notice');
+            //trace('密钥' . $iv, 'notice');
             $refresh_token = $this->checkRefreshToken($refresh_token_code, generateKey(), generateIv($iv));
             if($refresh_token){
                 $num++;
@@ -130,8 +130,11 @@ class TokenController extends BaseController
             if ($refresh_ttl < 86400 * 7) {
                 $redis_master->expire($refresh_token_key, Config::get('config.refresh_token_expires'));
             }
-            //trace('正确返回accessToken', 'notice');
-            //trace(['accessToken' => $access_token, 'accessTokenExpire' => $redis_master->ttl($cache_prefix . 'accessToken:' . $access_token)], 'notice');
+            
+            // 数据库写入access token 统计
+            $user_id = RedisController::getInstance('sync')->hGet($refresh_token_key, 'user_id');
+            (new FirebaseUserModel())->save(['access_token_number'  => ['inc', 1], 'ip' => real_ip(), 'version' => getHeader('Version')],['user_id' => $user_id]);
+            
             return show('Success', ['accessToken' => $access_token, 'accessTokenExpire' => $redis_master->ttl($cache_prefix . 'accessToken:' . $access_token)]);
             //return show('签发成功', $access_token, 0, ['Expires'=>60]);
         } else {

@@ -22,6 +22,7 @@ class FirebaseJwtController
             $this->firebaseUserInsert($firebase_user);
             return $firebase_user;
         } catch (IdTokenVerificationFailed $e) {
+            trace('decoded IdTokenVerificationFailed 错误');
             trace($e->getMessage(), 'error');
             return false;
         }
@@ -35,7 +36,7 @@ class FirebaseJwtController
             $user_id = $firebase_user['user_id'];
             $is_register = $firebase_user_model
                 ->where('user_id', $user_id)
-                ->cache($user_id, 10*60)
+                //->cache($user_id, 10*60)
                 ->find();
 
             if (!$is_register) {
@@ -43,63 +44,26 @@ class FirebaseJwtController
                     $data['user'] = $firebase_user['email'];
                 }
                 $data['user_id'] = $user_id;
-                $firebase_user_model->insertUser($data);
+                $data['ip'] = real_ip();
+                $data['refresh_token_number'] = 1;
+                $data['access_token_number'] = 1;
+                $data['version'] = getHeader('Version');
+                try{
+                    $firebase_user_model->insertUser($data);
+                } catch (\Exception $e){
+                    trace('firebaseUserInsert 写入异常捕获', 'notice');
+                    trace($data, 'notice');
+                    trace($is_register, 'notice');
+                    trace($e->getMessage(), 'error');
+                }
+                
+            }else {
+                // 数据库写入refresh token 统计
+                $is_register->refresh_token_number = ['inc', 1];
+                $is_register->ip = real_ip();
+                $is_register->version = getHeader('Version');
+                $is_register->save();
             }
         }
     }
-
-    /*
-     *
-     * array (
-  'name' => '深蓝',
-  'picture' => 'https://lh3.googleusercontent.com/a-/AOh14GiTfrRk9934QPd7ZjDyfaP30kBUZt02YDpNugsO=s96-c',
-  'iss' => 'https://securetoken.google.com/flutter-receive-sms',
-  'aud' =>
-  array (
-    0 => 'flutter-receive-sms',
-  ),
-  'auth_time' => 1653373334,
-  'user_id' => 'N3mAWR1Gr6OK1oikGSJn1hVuELq1',
-  'sub' => 'N3mAWR1Gr6OK1oikGSJn1hVuELq1',
-  'iat' => 1653373334,
-  'exp' => 1653376934,
-  'email' => 'bilulanlv168@gmail.com',
-  'email_verified' => true,
-  'firebase' =>
-  array (
-    'identities' =>
-    array (
-      'google.com' =>
-      array (
-        0 => '100185012922278892652',
-      ),
-      'email' =>
-      array (
-        0 => 'bilulanlv168@gmail.com',
-      ),
-    ),
-    'sign_in_provider' => 'google.com',
-  ),
-
-     array (
-      'provider_id' => 'anonymous',
-      'iss' => 'https://securetoken.google.com/flutter-receive-sms',
-      'aud' =>
-      array (
-        0 => 'flutter-receive-sms',
-      ),
-      'auth_time' => 1653372542,
-      'user_id' => 'QqEIZjD1hDT4cRmAo8QUqsC9uIE2',
-      'sub' => 'QqEIZjD1hDT4cRmAo8QUqsC9uIE2',
-      'iat' => 1653372542,
-      'exp' => 1653376142,
-      'firebase' =>
-      array (
-        'identities' =>
-        array (
-        ),
-        'sign_in_provider' => 'anonymous',
-      ),
-
-     */
 }

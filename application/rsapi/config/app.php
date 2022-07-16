@@ -5,5 +5,6 @@
  */
 
 return [
-    'exception_handle'       => '\\app\\common\\exception\\HandleException'
+    'exception_handle'       => '\\app\\common\\exception\\HandleException',
+    'exception_tmpl'         => Env::get('app_path') . 'rsapi/tpl/exception.html',
 ];

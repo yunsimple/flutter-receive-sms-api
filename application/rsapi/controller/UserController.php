@@ -73,12 +73,12 @@ class UserController extends BaseController
      */
     public function notice(): \think\response\Json
     {
-        return show('success');
+        //return show('success');
         $description = [
-            'en' => 'There are prizes for public beta, welcome to submit bugs, suggestions, and have a chance to win surprises.',
-            'zh' => '公测有奖，欢迎提交bug、建议，有机会赢取惊喜。',
-            'pt' => 'Há prêmios para o beta público, bem-vindo ao enviar bugs, sugestões e ter a chance de ganhar surpresas.',
-            'de' => 'Es gibt Preise für die öffentliche Beta, Sie können gerne Fehler und Vorschläge einreichen und haben die Chance, Überraschungen zu gewinnen'
+            'en' => 'Thank you for using this APP. Since it has just been launched, it is inevitable that there will be some problems and bugs. Your corrections and suggestions are welcome, and we will try our best to make it better.',
+            'zh' => '感謝您使用這款APP，由於剛上線，難免會有一些問題和BUG，歡迎您的指正與給我們建議，我們會努力讓他變得更好。',
+            'pt' => 'Obrigado por usar este APP. Como ele acaba de ser lançado, é inevitável que haja alguns problemas e bugs. Suas correções e sugestões são bem-vindas, e faremos o possível para melhorá-lo.',
+            'de' => 'Vielen Dank, dass Sie diese APP verwenden. Da sie gerade erst gestartet wurde, ist es unvermeidlich, dass es einige Probleme und Fehler gibt. Ihre Korrekturen und Vorschläge sind willkommen, und wir werden unser Bestes geben, um sie zu verbessern.'
         ];
         $headers = getallheaders();
         $language = 'en';
@@ -90,13 +90,53 @@ class UserController extends BaseController
         }
         $notice = [
             [
-                'id' => 202200511123511,
+                'id' => md5($description['en']),
                 'description' => $description[$language],
                 'type' => 'info',
                 'isClose' => true
-            ],
+            ]
         ];
+        
+        $onlineNotice = $this->autoOnlineNotice($language);
+        if($onlineNotice){
+            array_push($notice, $onlineNotice);
+        }
         return show('success', $notice);
+    }
+    
+    // 自动/暂停 上线公告
+    public function autoOnlineNotice($language){
+        $online_time = (int)RedisController::getInstance('master')->get(Config::get('cache.prefix') . 'phone_online_time');
+        if($online_time < time()){
+            return false;
+        }
+        switch ($language){
+            case 'zh':
+                $zone = 'Asia/Taipei';
+                date_default_timezone_set($zone);
+                $notice = '新號碼上線時間為【' . $zone . date(' c', $online_time) . '】，有需要的用戶，請提前收藏。';
+                break;
+            case 'pt':
+                $zone = 'America/Sao_Paulo';
+                date_default_timezone_set($zone);
+                $notice = 'O novo número estará online em 【' . $zone . date(' c', $online_time) . ' BRT】, os usuários que precisarem, por favor, marque-o com antecedência.';
+                break;
+            case 'de':
+                $zone = 'Europe/Berlin';
+                date_default_timezone_set($zone);
+                $notice = 'Die neue Nummer wird am 【' . $zone . date(' c', $online_time) . '】 online sein, Benutzer, die sie benötigen, merken sie sich bitte im Voraus.';
+                break;
+            default:
+                $zone = 'America/New_York';
+                date_default_timezone_set($zone);
+                $notice = 'The new number will be online on 【' . $zone . date(' c', $online_time) . '】, users who need it, please bookmark it in advance.';
+        }
+        return [
+                'id' => $online_time,
+                'description' => $notice,
+                'type' => 'info',
+                'isClose' => true
+            ];
     }
     
     // 合并本地账号

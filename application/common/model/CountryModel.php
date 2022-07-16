@@ -34,7 +34,14 @@ class CountryModel extends BaseModel
             // 更改获取到的语言字段 en_title 改成title
             $new_data[$key]['id'] = $value['id'];
             $new_data[$key]['bh'] = $value['bh'];
-            $new_data[$key]['title'] = $value[$language . '_title'];
+            
+            try{
+                    $new_data[$key]['title'] = $value[$language . '_title'];
+                }catch (\Exception $e){
+                    $new_data[$key]['title'] = $value['en_title'];
+                    trace('app获取国家对应语言错误', 'notice');
+                    trace(json($e->getMessage()), 'error');
+                }
         }
         return $new_data;
     }

@@ -20,6 +20,7 @@ return [
     'aes_mode'=> 'aes-256-cbc',
     'access_token_expires' => 30*60,
     'refresh_token_expires' => 30*86400,
+    'sign_in_coins' => 10,
 
     //状态码
     'empty' => 3000, //数据为空
@@ -28,6 +29,7 @@ return [
     'vip_number' => 3004, //type = 3 vip号码
     'not_enough_coins' => 3005, //金币不足
     'repeat_buy' => 3006, // 重复购买
+    'today_has_Sign_in' => 3007, // 今天已经签到
     
     'no_permission' => 4003, //没有权限
 

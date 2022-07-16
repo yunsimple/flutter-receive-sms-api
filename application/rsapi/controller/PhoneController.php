@@ -172,7 +172,7 @@ class PhoneController extends BaseController
             [
                 'newPhoneCount' => (int) $new_phone_count,
                 'upcomingPhoneCount' => (int) $phone_model->getUpcomingNumber(),
-                'vipPhoneCount' => (int) $phone_model->where('type', 3)->cache('vip_phone_count', 3600)->count(),
+                'vipPhoneCount' => (int) $phone_model->where([['type', '=', 3], ['display', '=', 1], ['show', '=', 1]])->cache('vip_phone_count', 3600)->count(),
                 'favoritesPhoneCount' => (int) RedisController::getInstance('sync')->sCard($refresh_redis_key)
             ]
         );

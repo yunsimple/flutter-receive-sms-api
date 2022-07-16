@@ -35,17 +35,18 @@ class AdmobController extends BaseController
          * 'key_id' => '3335741209',
          */
         $call_info = Request::param('');
-        trace($call_info, 'notice');
+        //trace($call_info, 'notice');
         $mysql_data = [
             'user_id' => $call_info['user_id'],
             'coins' => $call_info['reward_amount'],
             'type' => 1,
-            'json' => json_encode($call_info)
+            'json' => json_encode($call_info),
         ];
         // 增加余额，然后写入订单凭证
         Db::startTrans();
         try {
-            $result = (new FirebaseUserModel())->where('user_id', '=', $call_info['user_id'])->setInc('coins', $call_info['reward_amount']);
+            //$result = (new FirebaseUserModel())->where('user_id', '=', $call_info['user_id'])->setInc('coins', $call_info['reward_amount']);
+            $result = (new FirebaseUserModel())->save(['coins'  => ['inc', $call_info['reward_amount']]],['user_id' => $call_info['user_id']]);
             if ($result){
                 $redis_local = RedisController::getInstance();
                 $redis_local->del(Config::get('cache.prefix') . $call_info['user_id'] . 'coins');
@@ -93,7 +94,8 @@ class AdmobController extends BaseController
         // 检查通过，扣除金币
         Db::startTrans();
         try{
-            $firebase_user_model->where('user_id', $user_id)->setDec('coins', $price);
+            //$firebase_user_model->where('user_id', $user_id)->setDec('coins', $price);
+            $firebase_user_model->save(['coins'  => ['dec', $price], 'ip' => real_ip()],['user_id' => $user_id]);
             $redis_local = RedisController::getInstance();
             $redis_local->del(Config::get('cache.prefix') . $user_id . 'coins');
             // 记录购买号码订单
@@ -104,6 +106,7 @@ class AdmobController extends BaseController
                 'create_time' => time(),
                 'update_time' => time(),
                 'type' => 2,
+                'ip' => real_ip()
             ];
             $result = $ad_order_model->cache(3600)->insert($buy_data_order);
             if ($result == 1){

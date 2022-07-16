@@ -19,7 +19,7 @@ class EmailController extends BaseController
         return show('success', ['1655mail.com', 'iperfectmail.com'], 0, $request->header);
     }
     
-    //获取emal
+    //获取email
     public function emailGet(Request $request)
     {
         $email = input('post.email');
@@ -32,7 +32,7 @@ class EmailController extends BaseController
         if ($result['status']){
             if (count($result['data']) > 0){
                 //判断是否存在需要过滤的邮件发布商
-                $str = [
+/*                $str = [
 
                 ];
                 foreach ($result['data'] as $key => $value){
@@ -43,7 +43,7 @@ class EmailController extends BaseController
                             $result['data'][$key]['html'] = '抱歉，不能提供这个验证码，请勿用于非法用途！';
                         }
                     }
-                }
+                }*/
                 return show('Success', $result['data'], 0, $request->header);
             }else{
                 return show('No data','', 3000, $request->header);
@@ -54,10 +54,9 @@ class EmailController extends BaseController
         }
     }
 
-    //指字用户名申请emal
+    //指字用户名申请email
     public function emailApply(Request $request)
     {
-        trace(input('post.'), 'notice');
         $user = strtolower(trim(input('post.email_name')));
         $site = trim(input('post.site'));
         if (empty($user)){
@@ -72,7 +71,9 @@ class EmailController extends BaseController
         $result = $bt->emailApply($user, $user . $site);
         if ($result['status']){
             Session::set('email', $user . $site);
-            (RedisController::getInstance())->incr('mail_user_total');
+            $redis_local = RedisController::getInstance();
+            $key = config('cache.prefix') . 'email:getMails';
+            $redis_local->hIncrBy($key, date('Ymd'), 1);
             return show('Success', $user . $site, 0, $request->header);
         }else{
             return show('Failed to apply, please try another account', $result, 4000, $request->header);

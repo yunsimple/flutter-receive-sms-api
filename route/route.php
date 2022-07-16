@@ -13,7 +13,7 @@ use think\facade\Route;
 
 $sub_domain = get_subdomain();
 
-Route::get('test', 'rsapi/Test/index');
+Route::any('test', 'rsapi/Activity/continuousSignIn');
 Route::post('phone', 'rsapi/Phone/getPhone');
 Route::post('country', 'rsapi/Country/getCountry');
 Route::post('message', 'rsapi/Message/getMessage');
@@ -45,6 +45,7 @@ Route::post('buy_number', 'rsapi/Admob/buyNumber');
 Route::post('coins', 'rsapi/Admob/getCoins');
 Route::post('merge', 'rsapi/User/mergeUser');
 Route::post('delete_user', 'rsapi/User/deleteUser');
+Route::post('sign_in', 'rsapi/Activity/signIn');
 
 if ($sub_domain == 'rsapi'){
     Route::get('test', 'rsapi/Test/index');
